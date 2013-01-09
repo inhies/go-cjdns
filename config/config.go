@@ -22,6 +22,31 @@ func LoadMinConfig(filein string) (*Config, error) {
 	//Parse the JSON in to our struct which supports all requried fields for cjdns
 	structured, err := parseJSONStruct(raw)
 	if err != nil {
+		// BUG(inhies): Find a better way of dealing with these errors.
+		if e, ok := err.(*json.SyntaxError); ok {
+			// BUG(inhies): Instead of printing x amount of characters, print the previous and following 2 lines
+			fmt.Println("Invalid JSON") //" at byte", e.Offset, "(after stripping comments...)")
+			fmt.Println("----------------------------------------")
+			fmt.Println(string(raw[e.Offset-60 : e.Offset+60]))
+			fmt.Println("----------------------------------------")
+		} else if _, ok := err.(*json.InvalidUTF8Error); ok {
+			fmt.Println("Invalid UTF-8")
+		} else if e, ok := err.(*json.InvalidUnmarshalError); ok {
+			fmt.Println("Invalid unmarshall type", e.Type)
+			fmt.Println(err)
+		} else if e, ok := err.(*json.UnmarshalFieldError); ok {
+			fmt.Println("Invalid unmarshall field", e.Field, e.Key, e.Type)
+		} else if e, ok := err.(*json.UnmarshalTypeError); ok {
+			fmt.Println("Invalid JSON")
+			fmt.Println("Expected", e.Type, "but received a", e.Value)
+			fmt.Println("I apologize for not being more helpful")
+		} else if e, ok := err.(*json.UnsupportedTypeError); ok {
+			fmt.Println("Invalid JSON")
+			fmt.Println("I am unable to utilize type", e.Type)
+		} else if e, ok := err.(*json.UnsupportedValueError); ok {
+			fmt.Println("Invalid JSON")
+			fmt.Println("I am unable to utilize value", e.Value, e.Str)
+		}
 		return nil, err
 	}
 
