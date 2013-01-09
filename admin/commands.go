@@ -70,8 +70,10 @@ func AdminLog_subscribe(user *Admin, file string, level string, line int) (chann
 		return
 	}
 	if _, ok := response["error"]; ok {
-		err = fmt.Errorf(response["error"].(string))
-		return
+		if response["error"] != "none" {
+			err = fmt.Errorf(response["error"].(string))
+			return
+		}
 	}
 	streamId = response["streamId"].(string)
 	channel = make(chan map[string]interface{}, 100) // use buffered channel to avoid blocking reader.
