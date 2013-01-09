@@ -100,6 +100,14 @@ func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map
 		if !ok {
 			return nil, fmt.Errorf("Socket closed")
 		}
+
+		// If an error field exists, and we have an error, return it
+		if _, ok := response["error"]; ok {
+			if response["error"] != "none" {
+				err = fmt.Errorf(response["error"].(string))
+				return
+			}
+		}
 		return output, nil
 	}
 	//Send the query
