@@ -176,17 +176,17 @@ func SendPing(user *Admin, timeout time.Duration) (bool, error) {
 	select {
 	case reply, ok = <-rChan:
 		if !ok {
-			fmt.Errorf("error reading ping response from cjdns")
+			fmt.Errorf("error reading ping response from cjdns.")
 		}
 	case <-time.After(timeout):
-		err = fmt.Errorf("cjdns ping timeout")
+		err = fmt.Errorf("cjdns is not responding, you may need to restart it.")
 	}
 
 	if err != nil {
 		return false, err
 	}
 	if reply["q"] != "pong" {
-		err := fmt.Errorf("Did not recieve pong")
+		err := fmt.Errorf("Did not recieve pong from cjdns.")
 		return false, err
 	}
 	return true, nil
