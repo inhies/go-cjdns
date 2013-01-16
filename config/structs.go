@@ -27,13 +27,19 @@ type AdminBlock struct {
 }
 
 type InterfacesList struct {
-	UDPInterface []InterfaceBlock `json:"UDPInterface,omitempty"` //Network interface
-	ETHInterface []InterfaceBlock `json:"ETHInterface,omitempty"` //Ethernet interface
+	UDPInterface []UDPInterfaceBlock `json:"UDPInterface,omitempty"` //Network interface
+	ETHInterface []EthInterfaceBlock `json:"ETHInterface,omitempty"` //Ethernet interface
 }
 
-type InterfaceBlock struct {
-	Bind      string                `json:"bind"`      //Address or interface to bind to ("0.0.0.0:port" or "eth0")
-	ConnectTo map[string]Connection `json:"connectTo"` //Maps connection information to peer details, where the Key is the peer's IPv4 address and port, or MAC address, and the Connection contains all of the information about the peer, such as password and public key
+type UDPInterfaceBlock struct {
+	Bind      string                `json:"bind"`      //Address to bind to ("0.0.0.0:port")
+	ConnectTo map[string]Connection `json:"connectTo"` //Maps connection information to peer details, where the Key is the peer's IPv4 address and port and the Connection contains all of the information about the peer, such as password and public key
+}
+
+type EthInterfaceBlock struct {
+	Bind      string                `json:"bind"`      //Interface to bind to ("eth0")
+	ConnectTo map[string]Connection `json:"connectTo"` //Maps connection information to peer details, where the Key is the peer's MAC address and the Connection contains all of the information about the peer, such as password and public key
+     Beacon    int                   `json:"beacon"`    //Sets the beacon state for the ether interface. 0 = disabled, 1 = accept beacons, 2 = send and accept beacons.
 }
 
 type Connection struct {
