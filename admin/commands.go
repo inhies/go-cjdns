@@ -5,6 +5,63 @@ import (
 	"time"
 )
 
+//ETHInterface_beacon will set the specified beacon state on the specified interface
+//State is any of the following: 
+//0 -- Disabled.
+//1 -- Accept beacons, this will cause cjdns to accept incoming
+//beacon messages and try connecting to the sender.
+//2 -- Accept and send beacons, this will cause cjdns to broadcast
+//messages on the local network which contain a randomly
+//generated per-session password, other nodes which have this
+//set to 1 or 2 will hear the beacon messages and connect
+//automatically.
+func ETHInterface_beacon(user *Admin, iface int, state int) (response map[string]interface{}, err error) {
+	args := make(map[string]interface{})
+	args["interfaceNumber"] = iface
+	args["state"] = state
+	response, err = SendCmd(user, "ETHInterface_beacon", args)
+	if err != nil {
+		return
+	}
+	return
+}
+
+//Initiates a connection to the specified node
+func ETHInterface_beginConnection(user *Admin, iface int, mac string, pass string, pubkey string) (response map[string]interface{}, err error) {
+	args := make(map[string]interface{})
+	args["interfaceNumber"] = iface
+	args["macAddress"] = mac
+	args["password"] = pass
+	args["publicKey"] = pubkey
+	response, err = SendCmd(user, "ETHInterface_beginConnection", args)
+	if err != nil {
+		return
+	}
+	return
+}
+
+//ETHInterface_new creates a new ethernet interface
+func ETHInterface_new(user *Admin, device string) (response map[string]interface{}, err error) {
+	args := make(map[string]interface{})
+	args["bindDevice"] = device
+	response, err = SendCmd(user, "ETHInterface_new", args)
+	if err != nil {
+		return
+	}
+	return
+}
+
+//RouterModule_lookup returns a single path for an address. Not sure what this is used for
+func RouterModule_lookup(user *Admin, address string) (response map[string]interface{}, err error) {
+	args := make(map[string]interface{})
+	args["address"] = address
+	response, err = SendCmd(user, "RouterModule_lookup", args)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // Core_exit tells cjdns to shutdown
 func Core_exit(user *Admin) (response map[string]interface{}, err error) {
 	response, err = SendCmd(user, "Core_exit", nil)
@@ -136,24 +193,6 @@ func ReqCookie(user *Admin) (cookie string, err error) {
 	}
 	cookie = response["cookie"].(string)
 	return
-	/*
-		query := make(map[string]interface{})
-		query["q"] = "cookie"
-
-		if err := sendOut(user, query); err != nil {
-
-			return "", err
-		}
-
-		channel := make(chan map[string]interface{})
-
-		go getResponse(user, channel)
-
-		response := <-channel
-		//fmt.Printf("COOKIE: %v\n", response)
-		cookie, _ := response["cookie"].(string)
-		return cookie, nil
-	*/
 }
 
 // Sends a ping to cjdns and returns true if a pong was received
@@ -176,17 +215,17 @@ func SendPing(user *Admin, timeout time.Duration) (bool, error) {
 	select {
 	case reply, ok = <-rChan:
 		if !ok {
-			fmt.Errorf("error reading ping response from cjdns")
+			fmt.Errorf("error reading ping response from cjdns.")
 		}
 	case <-time.After(timeout):
-		err = fmt.Errorf("cjdns ping timeout")
+		err = fmt.Errorf("cjdns is not responding, you may need to restart it.")
 	}
 
 	if err != nil {
 		return false, err
 	}
 	if reply["q"] != "pong" {
-		err := fmt.Errorf("Did not recieve pong")
+		err := fmt.Errorf("Did not recieve pong from cjdns.")
 		return false, err
 	}
 	return true, nil
