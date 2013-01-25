@@ -151,7 +151,37 @@ func parseJSONObject(jsonIn []byte) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	cleanObj := fixJSON(object)
+	object = cleanObj.(map[string]interface{})
+
 	return object, nil
+}
+
+// fixJSON works around the issue of empty []'s in the JSON
+// https://codereview.appspot.com/7196050/
+func fixJSON(in interface{}) interface{} {
+	switch s := in.(type) {
+	case map[string]interface{}:
+		x := in.(map[string]interface{})
+		for key, value := range s {
+			x[key] = fixJSON(value)
+		}
+		in = x
+	case []interface{}:
+		x := in.([]interface{})
+		// If the interface is nill, we need to initialize it
+		// Otherwise it will be marshalled to 'null' in the JSON
+		if x == nil {
+			x = make([]interface{}, 0)
+		} else {
+			for i, value := range s {
+				x[i] = fixJSON(value)
+			}
+		}
+		in = x
+	}
+	return in
 }
 
 // Replaces all C-style comments (prefixed with "//" and inside "/* */") with empty strings. This is necessary in parsing JSON files that contain them.
