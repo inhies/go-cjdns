@@ -84,11 +84,12 @@ func Security_noFiles(user *Admin) (response map[string]interface{}, err error) 
 
 // Memory is supposed to return information on cjdns's memory use but it currently
 // just crashes it.
-func Memory(user *Admin) (response map[string]interface{}, err error) {
-	response, err = SendCmd(user, "memory", nil)
+func Memory(user *Admin) (memory int64, err error) {
+	response, err := SendCmd(user, "memory", nil)
 	if err != nil {
 		return
 	}
+	memory = response["bytes"].(int64)
 	return
 }
 
@@ -102,8 +103,12 @@ func IpTunnel_listConnections(user *Admin) (response map[string]interface{}, err
 }
 
 // GetFunctions returns all available functions that cjdns supports
-func GetFunctions(user *Admin) (response map[string]interface{}, err error) {
-	response, err = SendCmd(user, "availableFunctions", nil)
+func Admin_availableFunctions(user *Admin, page int) (response map[string]interface{}, err error) {
+	args := make(map[string]interface{})
+
+	args["page"] = page
+
+	response, err = SendCmd(user, "Admin_availableFunctions", args)
 	if err != nil {
 		return
 	}
@@ -192,6 +197,20 @@ func ReqCookie(user *Admin) (cookie string, err error) {
 		return
 	}
 	cookie = response["cookie"].(string)
+	return
+}
+
+// Checks with cjdns to see if asynchronous communication is allowed
+func Admin_asyncEnabled(user *Admin) (enabled bool, err error) {
+	response, err := SendCmd(user, "Admin_asyncEnabled", nil)
+	if err != nil {
+		return
+	}
+
+	if response["asyncEnabled"].(int64) == 1 {
+		enabled = true
+	}
+
 	return
 }
 

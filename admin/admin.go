@@ -36,6 +36,10 @@ const (
 	socketReaderChanSize = 100
 )
 
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+}
+
 func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map[string]interface{}, err error) {
 	query := make(map[string]interface{})
 	enc := bencode.NewEncoder()
@@ -46,7 +50,7 @@ func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map
 	query["txid"] = txid
 
 	// Check if we need to use authentication for this command.
-	if cmd == "ping" || cmd == "cookie" {
+	if cmd == "ping" || cmd == "cookie" || cmd == "Admin_asyncEnabled" {
 		query["q"] = cmd
 	} else {
 
@@ -210,7 +214,7 @@ func sendOut(user *Admin, query map[string]interface{}) error {
 
 // Connects to a running cjdns instance
 func Connect(bind, pass string) (admin *Admin, err error) {
-	conn, err := net.DialTimeout("tcp", bind, 2e9) // BUG(inhies): default timeout is 2 seconds. Add an option to make it user configurable
+	conn, err := net.DialTimeout("udp", bind, 2e9) // BUG(inhies): default timeout is 2 seconds. Add an option to make it user configurable
 	if err != nil {
 		return
 	}
@@ -222,7 +226,6 @@ func Connect(bind, pass string) (admin *Admin, err error) {
 	if err != nil {
 		return
 	}
-	rand.Seed(time.Now().UTC().UnixNano())
 
 	return
 }
