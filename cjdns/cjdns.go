@@ -1,5 +1,5 @@
-// Package admin provides easy methods to the cjdns admin interface
-package admin
+// Package cjdns provides easy methods to the cjdns admin interface
+package cjdns
 
 import (
 	"crypto/sha256"
@@ -123,7 +123,7 @@ func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map
 	return make(map[string]interface{}), nil
 }
 
-// Collects data from sockReader and sends it out on the correct channel as designated by 
+// Collects data from sockReader and sends it out on the correct channel as designated by
 // the txid or streamId fields.
 func Reader(user *Admin) {
 	//Create a channel and launch the go routine that actually reads from the socket
@@ -184,7 +184,7 @@ func sockReader(user *Admin, out chan<- map[string]interface{}) {
 			o, err := d.Decode()
 			if err != nil {
 				errCount++
-				// BUG(inhies): need to add an error recovery function where we will 
+				// BUG(inhies): need to add an error recovery function where we will
 				// increment the start point of the read by 1 until we get a valid response,
 				// then discard all previous data
 				if errCount >= 10 {
@@ -312,6 +312,89 @@ func PubKeyToIP(in []byte) (outString string, err error) {
 	return
 }
 
+// base32 encodes the public key for use in the decoder
+func EncodePubKey(in []byte) (out []byte) {
+	var wide, bits uint
+	var i2b = []byte("0123456789bcdfghjklmnpqrstuvwxyz")
+
+	for len(in) > 0 {
+		// Add the 8 bits of data from the next `in` byte above the existing bits
+		wide, in, bits = wide|uint(in[0])<<bits, in[1:], bits+8
+		for bits > 5 {
+			// Remove the least significant 5 bits and add their character to out
+			wide, out, bits = wide>>5, append(out, i2b[int(wide&0x1F)]), bits-5
+		}
+	}
+	// If it wasn't a precise multiple of 40 bits, add some padding based on the remaining bits
+	if bits > 0 {
+		out = append(out, i2b[int(wide)])
+	}
+	return out
+}
+
+func CheckPubKey(in []byte) bool {
+	// Do the hashing that generates the IP
+	out := sha512hash(sha512hash(in))
+	if out[0] != 0xfc {
+		return false
+	}
+	return true
+}
+
+//// Converts a cjdns public key to an ipv6 address
+//func PubKeyToIP(in []byte) (outString string, err error) {
+//	// Check for the trailing .k
+//	if in[len(in)-2] == '.' && in[len(in)-1] == 'k' {
+//		in = in[0 : len(in)-2]
+//	}
+
+//	var wide, bits uint
+//	var out []byte
+//	var i2b = []byte("0123456789bcdfghjklmnpqrstuvwxyz")
+//	var b2i = func() []byte {
+//		var ascii [256]byte
+//		for i := range ascii {
+//			ascii[i] = 255
+//		}
+//		for i, b := range i2b {
+//			ascii[b] = byte(i)
+//		}
+//		return ascii[:]
+//	}()
+
+//	for len(in) > 0 && in[0] != '=' {
+//		// Add the 5 bits of data corresponding to the next `in` character above existing bits
+//		wide, in, bits = wide|uint(b2i[int(in[0])])<<bits, in[1:], bits+5
+//		if bits >= 8 {
+//			// Remove the least significant 8 bits of data and add it to out
+//			wide, out, bits = wide>>8, append(out, byte(wide)), bits-8
+//		}
+//	}
+
+//	// If there was padding, there will be bits left, but they should be zero
+//	if wide != 0 {
+//		err = fmt.Errorf("extra data at end of decode")
+//		return
+//	}
+
+//	// Do the hashing that generates the IP
+//	out = sha512hash(sha512hash(out))
+//	if out[0] != 0xfc {
+//		err = fmt.Errorf("invalid")
+//		return
+//	}
+
+//	out = out[0:16]
+
+//	// Assemble the IP
+//	for i := 0; i < 16; i++ {
+//		if i > 0 && i < 16 && i%2 == 0 {
+//			outString += ":"
+//		}
+//		outString += fmt.Sprintf("%02x", out[i])
+//	}
+//	return
+//}
 func sha512hash(input []byte) []byte {
 	h := sha512.New()
 	h.Write(input)
