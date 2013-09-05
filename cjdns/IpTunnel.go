@@ -3,8 +3,8 @@ package cjdns
 
 
 // IpTunnel_listConnections returns a list of all current IP tunnels
-func IpTunnel_listConnections(user *Admin) (response map[string]interface{}, err error) {
-	response, err = SendCmd(user, "IpTunnel_listConnections", nil)
+func (a *Admin) IpTunnel_listConnections(user *Admin) (response map[string]interface{}, err error) {
+	response, err = SendCmd(a, "IpTunnel_listConnections", nil)
 	if err != nil {
 		return
 	}

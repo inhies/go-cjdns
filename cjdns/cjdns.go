@@ -55,7 +55,7 @@ func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map
 	} else {
 
 		//Request a cookie
-		cookie, err := ReqCookie(user)
+		cookie, err := user.ReqCookie()
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +221,7 @@ func Connect(bind, pass string) (admin *Admin, err error) {
 	var l sync.Mutex
 	admin = &Admin{bind, pass, conn, l, make(map[string]chan map[string]interface{})}
 	go Reader(admin)
-	_, err = SendPing(admin, 1000)
+	_, err = admin.SendPing(1000)
 
 	if err != nil {
 		return
