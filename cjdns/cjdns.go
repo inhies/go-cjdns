@@ -5,23 +5,32 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/inhies/bencode"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net"
+	"os/user"
+	"regexp"
 	"strconv"
 	"sync"
 	"time"
 )
 
+type CjdnsAdminConfig struct {
+	Addr     string `json:"addr"`
+	Port     int    `json:"port"`
+	Password string `json:"password"`
+}
+
 // Contains the admin info for connecting to cjdns
 type Admin struct {
-	Address  string
-	Password string
 	Conn     net.Conn
 	Mu       sync.Mutex
 	Channels map[string]chan map[string]interface{}
+	password string
 }
 
 type PingResponse struct {
@@ -38,6 +47,66 @@ const (
 
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
+}
+func stripComments(b []byte) ([]byte, error) {
+	regComment, err := regexp.Compile("(?s)//.*?\n|/\\*.*?\\*/")
+	if err != nil {
+		return nil, err
+	}
+	out := regComment.ReplaceAllLiteral(b, nil)
+	return out, nil
+}
+
+func NewAdmin(config *CjdnsAdminConfig) (admin *Admin, err error) {
+	if config == nil {
+		config = new(CjdnsAdminConfig)
+		u, err := user.Current()
+		if err != nil {
+			return nil, err
+		}
+
+		rawFile, err := ioutil.ReadFile(u.HomeDir + "/.cjdnsadmin")
+		if err != nil {
+			return nil, err
+		}
+
+		raw, err := stripComments(rawFile)
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal(raw, &config)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	addr := &net.UDPAddr{
+		IP:   net.ParseIP(config.Addr),
+		Port: config.Port,
+	}
+
+	conn, err := net.DialUDP("udp", nil, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	var l sync.Mutex
+
+	admin = &Admin{
+		password: config.Password,
+		Conn:     conn,
+		Mu:       l,
+		Channels: make(map[string]chan map[string]interface{}),
+	}
+
+	go Reader(admin)
+	_, err = SendPing(admin, 1000)
+
+	if err != nil {
+		return
+	}
+	return
 }
 
 func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map[string]interface{}, err error) {
@@ -67,7 +136,7 @@ func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map
 			query["args"] = args
 		}
 		//Generate the first hash we need
-		query["hash"] = sha256hash(user.Password + cookie)
+		query["hash"] = sha256hash(user.password + cookie)
 
 		//Encode the query and get the final hash
 		enc.Encode(query)
@@ -210,24 +279,6 @@ func sendOut(user *Admin, query map[string]interface{}) error {
 		return err
 	}
 	return nil
-}
-
-// Connects to a running cjdns instance
-func Connect(bind, pass string) (admin *Admin, err error) {
-	conn, err := net.DialTimeout("udp", bind, 2e9) // BUG(inhies): default timeout is 2 seconds. Add an option to make it user configurable
-	if err != nil {
-		return
-	}
-	var l sync.Mutex
-	admin = &Admin{bind, pass, conn, l, make(map[string]chan map[string]interface{})}
-	go Reader(admin)
-	_, err = SendPing(admin, 1000)
-
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // Hashes a string and returns it
