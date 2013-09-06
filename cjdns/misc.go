@@ -7,7 +7,7 @@ import (
 
 // Memory is supposed to return information on cjdns's memory use but it currently
 // just crashes it.
-func Memory(user *Admin) (memory int64, err error) {
+func Memory(user *Conn) (memory int64, err error) {
 	response, err := SendCmd(user, "memory", nil)
 	if err != nil {
 		return
@@ -17,7 +17,7 @@ func Memory(user *Admin) (memory int64, err error) {
 }
 
 // This will return a page from cjdns's routing table.
-func NodeStore_dumpTable(user *Admin, page int) (response map[string]interface{}, err error) {
+func NodeStore_dumpTable(user *Conn, page int) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["page"] = page
 	response, err = SendCmd(user, "NodeStore_dumpTable", args)
@@ -28,7 +28,7 @@ func NodeStore_dumpTable(user *Admin, page int) (response map[string]interface{}
 }
 
 // Requests a cookie from cjdns and returns it.
-func ReqCookie(user *Admin) (cookie string, err error) {
+func ReqCookie(user *Conn) (cookie string, err error) {
 	response, err := SendCmd(user, "cookie", nil)
 	if err != nil {
 		return
@@ -39,7 +39,7 @@ func ReqCookie(user *Admin) (cookie string, err error) {
 
 // Sends a ping to cjdns and returns true if a pong was received
 // before the specified timeout.
-func SendPing(user *Admin, timeout time.Duration) (bool, error) {
+func SendPing(user *Conn, timeout time.Duration) (bool, error) {
 	rChan := make(chan map[string]interface{}, 1)
 	go func() {
 		response, err := SendCmd(user, "ping", nil)

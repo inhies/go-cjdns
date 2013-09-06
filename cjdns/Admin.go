@@ -2,7 +2,7 @@ package cjdns
 
 
 // GetFunctions returns all available functions that cjdns supports
-func Admin_availableFunctions(user *Admin, page int) (response map[string]interface{}, err error) {
+func Admin_availableFunctions(user *Conn, page int) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 
 	args["page"] = page
@@ -16,7 +16,7 @@ func Admin_availableFunctions(user *Admin, page int) (response map[string]interf
 
 
 // Checks with cjdns to see if asynchronous communication is allowed
-func Admin_asyncEnabled(user *Admin) (enabled bool, err error) {
+func Admin_asyncEnabled(user *Conn) (enabled bool, err error) {
 	response, err := SendCmd(user, "Admin_asyncEnabled", nil)
 	if err != nil {
 		return

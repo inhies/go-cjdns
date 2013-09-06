@@ -11,7 +11,7 @@ package cjdns
 //generated per-session password, other nodes which have this
 //set to 1 or 2 will hear the beacon messages and connect
 //automatically.
-func ETHInterface_beacon(user *Admin, iface int, state int) (response map[string]interface{}, err error) {
+func ETHInterface_beacon(user *Conn, iface int, state int) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["interfaceNumber"] = iface
 	args["state"] = state
@@ -23,7 +23,7 @@ func ETHInterface_beacon(user *Admin, iface int, state int) (response map[string
 }
 
 //Initiates a connection to the specified node
-func ETHInterface_beginConnection(user *Admin, iface int, mac string, pass string, pubkey string) (response map[string]interface{}, err error) {
+func ETHInterface_beginConnection(user *Conn, iface int, mac string, pass string, pubkey string) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["interfaceNumber"] = iface
 	args["macAddress"] = mac
@@ -37,7 +37,7 @@ func ETHInterface_beginConnection(user *Admin, iface int, mac string, pass strin
 }
 
 //ETHInterface_new creates a new ethernet interface
-func ETHInterface_new(user *Admin, device string) (response map[string]interface{}, err error) {
+func ETHInterface_new(user *Conn, device string) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["bindDevice"] = device
 	response, err = SendCmd(user, "ETHInterface_new", args)

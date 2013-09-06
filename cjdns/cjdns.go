@@ -26,7 +26,7 @@ type CjdnsAdminConfig struct {
 }
 
 // Contains the admin info for connecting to cjdns
-type Admin struct {
+type Conn struct {
 	Conn     net.Conn
 	Mu       sync.Mutex
 	Channels map[string]chan map[string]interface{}
@@ -57,7 +57,7 @@ func stripComments(b []byte) ([]byte, error) {
 	return out, nil
 }
 
-func NewAdmin(config *CjdnsAdminConfig) (admin *Admin, err error) {
+func Connect(config *CjdnsAdminConfig) (admin *Conn, err error) {
 	if config == nil {
 		config = new(CjdnsAdminConfig)
 		u, err := user.Current()
@@ -93,7 +93,7 @@ func NewAdmin(config *CjdnsAdminConfig) (admin *Admin, err error) {
 
 	var l sync.Mutex
 
-	admin = &Admin{
+	admin = &Conn{
 		password: config.Password,
 		Conn:     conn,
 		Mu:       l,
@@ -109,7 +109,7 @@ func NewAdmin(config *CjdnsAdminConfig) (admin *Admin, err error) {
 	return
 }
 
-func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map[string]interface{}, err error) {
+func SendCmd(user *Conn, cmd string, args map[string]interface{}) (response map[string]interface{}, err error) {
 	query := make(map[string]interface{})
 	enc := bencode.NewEncoder()
 
@@ -194,7 +194,7 @@ func SendCmd(user *Admin, cmd string, args map[string]interface{}) (response map
 
 // Collects data from sockReader and sends it out on the correct channel as designated by
 // the txid or streamId fields.
-func Reader(user *Admin) {
+func Reader(user *Conn) {
 	//Create a channel and launch the go routine that actually reads from the socket
 	inChan := make(chan map[string]interface{}, socketReaderChanSize)
 	go sockReader(user, inChan)
@@ -232,7 +232,7 @@ func Reader(user *Admin) {
 }
 
 // sockReader continually reads from the socket and sends the data out
-func sockReader(user *Admin, out chan<- map[string]interface{}) {
+func sockReader(user *Conn, out chan<- map[string]interface{}) {
 	buf := make([]byte, 69632)
 	remains := ""
 	errCount := 0
@@ -271,7 +271,7 @@ func sockReader(user *Admin, out chan<- map[string]interface{}) {
 }
 
 // Writes data to the socket of the specified connection
-func sendOut(user *Admin, query map[string]interface{}) error {
+func sendOut(user *Conn, query map[string]interface{}) error {
 	enc := bencode.NewEncoder()
 	enc.Encode(query)
 	_, err := io.WriteString(user.Conn, string(enc.Bytes))

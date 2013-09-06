@@ -1,7 +1,7 @@
 package cjdns
 
 //RouterModule_lookup returns a single path for an address. Not sure what this is used for
-func RouterModule_lookup(user *Admin, address string) (response map[string]interface{}, err error) {
+func RouterModule_lookup(user *Conn, address string) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["address"] = address
 	response, err = SendCmd(user, "RouterModule_lookup", args)
@@ -13,7 +13,7 @@ func RouterModule_lookup(user *Admin, address string) (response map[string]inter
 
 
 // Pings the specified IPv6 address and will timeout if it takes longer than the specified timeout period.
-func RouterModule_pingNode(user *Admin, addr string, timeout int) (data PingResponse, err error) {
+func RouterModule_pingNode(user *Conn, addr string, timeout int) (data PingResponse, err error) {
 	args := make(map[string]interface{})
 	args["path"] = addr
 	args["timeout"] = timeout
