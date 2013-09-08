@@ -80,7 +80,7 @@ func InterfaceController_peerStats(user *Conn, page int) (
 			}
 		}
 		// Convert the last packet received timestamp to a time.Time
-		last := time.Unix(info["last"].(int64), 0)
+		last := time.Unix(0, info["last"].(int64)*1000000)
 
 		peer := PeerStats{
 			Last:        last,
