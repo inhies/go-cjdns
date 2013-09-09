@@ -1,6 +1,5 @@
 package cjdns
 
-
 //ETHInterface_beacon will set the specified beacon state on the specified interface
 //State is any of the following:
 //0 -- Disabled.
@@ -11,11 +10,11 @@ package cjdns
 //generated per-session password, other nodes which have this
 //set to 1 or 2 will hear the beacon messages and connect
 //automatically.
-func ETHInterface_beacon(user *Conn, iface int, state int) (response map[string]interface{}, err error) {
+func (c *Conn) ETHInterface_beacon(iface int, state int) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["interfaceNumber"] = iface
 	args["state"] = state
-	response, err = SendCmd(user, "ETHInterface_beacon", args)
+	response, err = SendCmd(c, "ETHInterface_beacon", args)
 	if err != nil {
 		return
 	}
@@ -23,13 +22,13 @@ func ETHInterface_beacon(user *Conn, iface int, state int) (response map[string]
 }
 
 //Initiates a connection to the specified node
-func ETHInterface_beginConnection(user *Conn, iface int, mac string, pass string, pubkey string) (response map[string]interface{}, err error) {
+func (c *Conn) ETHInterface_beginConnection(iface int, mac string, pass string, pubkey string) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["interfaceNumber"] = iface
 	args["macAddress"] = mac
 	args["password"] = pass
 	args["publicKey"] = pubkey
-	response, err = SendCmd(user, "ETHInterface_beginConnection", args)
+	response, err = SendCmd(c, "ETHInterface_beginConnection", args)
 	if err != nil {
 		return
 	}
@@ -37,10 +36,10 @@ func ETHInterface_beginConnection(user *Conn, iface int, mac string, pass string
 }
 
 //ETHInterface_new creates a new ethernet interface
-func ETHInterface_new(user *Conn, device string) (response map[string]interface{}, err error) {
+func (c *Conn) ETHInterface_new(device string) (response map[string]interface{}, err error) {
 	args := make(map[string]interface{})
 	args["bindDevice"] = device
-	response, err = SendCmd(user, "ETHInterface_new", args)
+	response, err = SendCmd(c, "ETHInterface_new", args)
 	if err != nil {
 		return
 	}

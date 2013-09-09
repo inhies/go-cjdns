@@ -101,7 +101,7 @@ func Connect(config *CjdnsAdminConfig) (admin *Conn, err error) {
 	}
 
 	go Reader(admin)
-	_, err = SendPing(admin, 1000)
+	_, err = admin.SendPing(1000)
 
 	if err != nil {
 		return
@@ -124,7 +124,7 @@ func SendCmd(user *Conn, cmd string, args map[string]interface{}) (response map[
 	} else {
 
 		//Request a cookie
-		cookie, err := ReqCookie(user)
+		cookie, err := user.ReqCookie()
 		if err != nil {
 			return nil, err
 		}

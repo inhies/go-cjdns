@@ -47,14 +47,13 @@ type PeerStats struct {
 }
 
 // Returns stats on currently connected peers
-func InterfaceController_peerStats(user *Conn, page int) (
+func (c *Conn) InterfaceController_peerStats(page int) (
 	response []PeerStats, err error) {
-
 	args := make(map[string]interface{})
 
 	args["page"] = page
 
-	data, err := SendCmd(user, "InterfaceController_peerStats", args)
+	data, err := SendCmd(c, "InterfaceController_peerStats", args)
 	if err != nil {
 		return
 	}
