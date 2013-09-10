@@ -5,7 +5,7 @@ import (
 )
 
 func ExampleCheckPubkey() {
-	rawKey, _ := ParsePubKey("nss00kzfgckxzju9ynlk5qv9gdljh3wwhtc5dw6d7mk9m2fmgg40.k")
+	rawKey, _ := ParsePubKey("r6jzx210usqbgnm3pdtm1z6btd14pvdtkn5j8qnpgqzknpggkuw0.k")
 	valid := CheckPubKey(rawKey)
 	fmt.Println(valid)
 	// Output:
@@ -13,15 +13,15 @@ func ExampleCheckPubkey() {
 }
 
 func ExamplePadIPv6() {
-	addr := PadIPv6("fc2d:39c5:be:8dfa:db9d:bf12:7942:b806")
+	addr := PadIPv6("fc68:cb2c:60db:cb96:19ac:34a8:fd34:3fc")
 	fmt.Println(addr)
 	// Output:
-	// fc2d:39c5:00be:8dfa:db9d:bf12:7942:b806
+	// fc68:cb2c:60db:cb96:19ac:34a8:fd34:03fc
 }
 
 func ExamplePubKeyToIP() {
-	addr, _ := PubKeyToIP("nss00kzfgckxzju9ynlk5qv9gdljh3wwhtc5dw6d7mk9m2fmgg40.k")
+	addr, _ := PubKeyToIP("r6jzx210usqbgnm3pdtm1z6btd14pvdtkn5j8qnpgqzknpggkuw0.k")
 	fmt.Println(addr)
 	// Output:
-	// fc2d:39c5:00be:8dfa:db9d:bf12:7942:b806
+	// fc68:cb2c:60db:cb96:19ac:34a8:fd34:03fc
 }
