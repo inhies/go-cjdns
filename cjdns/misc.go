@@ -16,17 +16,6 @@ func (c *Conn) Memory() (memory int64, err error) {
 	return
 }
 
-// This will return a page from cjdns's routing table.
-func (c *Conn) NodeStore_dumpTable(page int) (response map[string]interface{}, err error) {
-	args := make(map[string]interface{})
-	args["page"] = page
-	response, err = SendCmd(c, "NodeStore_dumpTable", args)
-	if err != nil {
-		return
-	}
-	return
-}
-
 // Requests a cookie from cjdns and returns it.
 func (c *Conn) ReqCookie() (cookie string, err error) {
 	response, err := SendCmd(c, "cookie", nil)
