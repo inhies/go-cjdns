@@ -313,56 +313,6 @@ func myRand(min, max int, char string) string {
 	return string(buf)
 }
 
-// Acceptes a []byte of a cjdns public key and returns a string of the matching IPv6 address
-func PubKeyToIP(in []byte) (outString string, err error) {
-	// Check for the trailing .k
-	if in[len(in)-2] == '.' && in[len(in)-1] == 'k' {
-		in = in[0 : len(in)-2]
-	}
-
-	var wide, bits uint
-	var out []byte
-	var i2b = []byte("0123456789bcdfghjklmnpqrstuvwxyz")
-	var b2i = func() []byte {
-		var ascii [256]byte
-		for i := range ascii {
-			ascii[i] = 255
-		}
-		for i, b := range i2b {
-			ascii[b] = byte(i)
-		}
-		return ascii[:]
-	}()
-
-	for len(in) > 0 && in[0] != '=' {
-		// Add the 5 bits of data corresponding to the next `in` character above existing bits
-		wide, in, bits = wide|uint(b2i[int(in[0])])<<bits, in[1:], bits+5
-		if bits >= 8 {
-			// Remove the least significant 8 bits of data and add it to out
-			wide, out, bits = wide>>8, append(out, byte(wide)), bits-8
-		}
-	}
-
-	// If there was padding, there will be bits left, but they should be zero
-	if wide != 0 {
-		err = fmt.Errorf("extra data at end of decode")
-		return
-	}
-
-	// Do the hashing that generates the IP
-	out = sha512hash(sha512hash(out))
-	out = out[0:16]
-
-	// Assemble the IP
-	for i := 0; i < 16; i++ {
-		if i > 0 && i < 16 && i%2 == 0 {
-			outString += ":"
-		}
-		outString += fmt.Sprintf("%02x", out[i])
-	}
-	return
-}
-
 // base32 encodes the public key for use in the decoder
 func EncodePubKey(in []byte) (out []byte) {
 	var wide, bits uint
@@ -381,15 +331,6 @@ func EncodePubKey(in []byte) (out []byte) {
 		out = append(out, i2b[int(wide)])
 	}
 	return out
-}
-
-func CheckPubKey(in []byte) bool {
-	// Do the hashing that generates the IP
-	out := sha512hash(sha512hash(in))
-	if out[0] != 0xfc {
-		return false
-	}
-	return true
 }
 
 //// Converts a cjdns public key to an ipv6 address
