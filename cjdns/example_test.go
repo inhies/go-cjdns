@@ -2,7 +2,7 @@ package cjdns_test
 
 import (
 	"fmt"
-	"github.com/3M3RY/go-cjdns/cjdns"
+	"github.com/inhies/go-cjdns/cjdns"
 )
 
 func ExampleCheckPubkey() {
