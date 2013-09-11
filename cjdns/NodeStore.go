@@ -1,9 +1,9 @@
 package cjdns
 
 import (
-	"fmt"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"sort"
 	"strings"
 )
@@ -62,21 +62,47 @@ type byQuality struct{ Routes }
 
 func (s byQuality) Less(i, j int) bool { return s.Routes[i].Link > s.Routes[j].Link }
 
-func log2x64(number uint64) uint {
-	var out uint
-	for number != 0 {
-		number = number >> 1
+// Log base 2 of a uint64
+func log2x64(in uint64) (out uint) {
+	for in != 0 {
+		in = in >> 1
 		out++
 	}
-	return out
+	return
 }
 
-func isBehind(destination uint64, midPath uint64) bool {
+// return true if packets destined for destination go through midPath.
+func isBehind(destination, midPath uint64) bool {
 	if midPath > destination {
 		return false
 	}
 	mask := ^uint64(0) >> (64 - log2x64(midPath))
 	return (destination & mask) == (midPath & mask)
+}
+
+// IsBehind returns true if packets destined for Route go through the specified node.
+func (r *Route) IsBehind(node *Route) bool {
+	return isBehind(r.rawPath, node.rawPath)
+}
+
+// Return true if destination is 1 hop away from midPath
+// WARNING: this depends on implementation quirks of the router and will be broken in the future.
+// NOTE: This may have false positives which isBehind() will remove.
+func isOneHop(destination, midPath uint64) bool {
+	if !isBehind(destination, midPath) {
+		return false
+	}
+
+	// The "why" is here:
+	// http://gitboria.com/cjd/cjdns/tree/master/switch/NumberCompress.h#L143
+	c := destination >> log2x64(midPath)
+	if c&1 != 0 {
+		return log2x64(c) == 4
+	}
+	if c&3 != 0 {
+		return log2x64(c) == 7
+	}
+	return log2x64(c) == 10
 }
 
 // Hops returns a Routes object representing a set of hops to a path
@@ -89,7 +115,6 @@ func (rs Routes) Hops(path string) (hops Routes) {
 			hops = append(hops, r)
 		}
 	}
-	hops.SortByPath()
 	return
 }
 
@@ -108,7 +133,7 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 		}
 		if e, ok := response["error"]; ok {
 			if e.(string) != "none" {
-				err = fmt.Errorf("NodeStore_dumpTable:", e.(string))
+				err = errors.New("NodeStore_dumpTable: " + e.(string))
 				return
 			}
 		}
@@ -143,3 +168,50 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 	}
 	return
 }
+
+/*
+// NodePeers returns a Routes object representing the direct peers of target.
+func (a *Admin) NodePeers(IP string) (directPeers Routes, err error) {
+	if l := len(IP); l > 40 {
+		err = errors.New(IP + " is not a valid address")
+		return
+	} else if l < 40 {
+		IP = PadIPv6(IP)
+	}
+
+	var table Routes
+	table, err = a.NodeStore_dumpTable()
+	if err != nil {
+		return
+	}
+
+	m := make(map[string]*Route)
+
+	for _, nodeA := range table {
+		if nodeA.IP != IP {
+			continue
+		}
+		fmt.Println("found", nodeA.IP, "at", nodeA.Path, "in table")
+
+		for _, nodeB := range table {
+			if nodeB.IP == IP {
+				continue
+			}
+			fmt.Println("looking at", nodeB.IP, nodeB.Path)
+			if isOneHop(nodeA.rawPath, nodeB.rawPath) || isOneHop(nodeB.rawPath, nodeA.rawPath) {
+				fmt.Println(nodeA.Path, "is next to", nodeB.Path)
+				if previous, ok := m[nodeB.IP]; !ok || previous.rawPath > nodeB.rawPath {
+					m[nodeB.IP] = nodeB
+				}
+			}
+		}
+	}
+	directPeers = make(Routes, len(m))
+	var i int
+	for _, r := range m {
+		directPeers[i] = r
+		i++
+	}
+	return
+}
+*/
