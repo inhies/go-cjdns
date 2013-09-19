@@ -93,6 +93,18 @@ func Memory(user *Admin) (memory int64, err error) {
 	return
 }
 
+// InterfaceController_peerStats returns a page of stats about direct peers
+func InterfaceController_peerStats(user *Admin, page int) (response map[string]interface{}, err error) {
+	args := make(map[string]interface{})
+	args["page"] = page
+
+	response, err = SendCmd(user, "InterfaceController_peerStats", args)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // IpTunnel_listConnections returns a list of all current IP tunnels
 func IpTunnel_listConnections(user *Admin) (response map[string]interface{}, err error) {
 	response, err = SendCmd(user, "IpTunnel_listConnections", nil)
