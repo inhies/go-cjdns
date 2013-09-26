@@ -1,6 +1,7 @@
 package cjdns
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -62,6 +63,13 @@ func (c *Conn) InterfaceController_peerStats() (
 		data, err = SendCmd(c, "InterfaceController_peerStats", args)
 		if err != nil {
 			return
+		}
+
+		if e, ok := data["error"]; ok {
+			if e.(string) != "none" {
+				err = fmt.Errorf("InterfaceController_peerStats: " + e.(string))
+				return
+			}
 		}
 
 		// Convert the map to a slice of structs.
