@@ -54,6 +54,8 @@ func (c *Conn) InterfaceController_peerStats() (
 	var page int
 	args := make(map[string]interface{})
 	var data map[string]interface{}
+	response = make([]PeerStats, 0)
+
 	for more {
 		args["page"] = page
 
@@ -64,7 +66,6 @@ func (c *Conn) InterfaceController_peerStats() (
 
 		// Convert the map to a slice of structs.
 		// This should be fixed so ALL functions return structs... eventually...
-		response = make([]PeerStats, 0)
 		for _, peer := range data["peers"].([]interface{}) {
 			info := peer.(map[string]interface{})
 
@@ -82,6 +83,7 @@ func (c *Conn) InterfaceController_peerStats() (
 					state = PeerState(i)
 				}
 			}
+
 			// Convert the last packet received timestamp to a time.Time
 			last := time.Unix(0, info["last"].(int64)*1000000)
 
