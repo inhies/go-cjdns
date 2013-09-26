@@ -47,50 +47,59 @@ type PeerStats struct {
 }
 
 // Returns stats on currently connected peers
-func (c *Conn) InterfaceController_peerStats(page int) (
+func (c *Conn) InterfaceController_peerStats() (
 	response []PeerStats, err error) {
+
+	more := true
+	var page int
 	args := make(map[string]interface{})
+	var data map[string]interface{}
+	for more {
+		args["page"] = page
 
-	args["page"] = page
-
-	data, err := SendCmd(c, "InterfaceController_peerStats", args)
-	if err != nil {
-		return
-	}
-
-	// Convert the map to a slice of structs.
-	// This should be fixed so ALL functions return structs... eventually...
-	response = make([]PeerStats, 0)
-	for _, peer := range data["peers"].([]interface{}) {
-		info := peer.(map[string]interface{})
-
-		// Convert the int to a bool
-		var incoming bool
-		if info["isIncoming"].(int64) > 0 {
-			incoming = true
+		data, err = SendCmd(c, "InterfaceController_peerStats", args)
+		if err != nil {
+			return
 		}
 
-		// Convert connection state to an int
-		var state PeerState
-		tu := strings.ToUpper(info["state"].(string))
-		for i, name := range peerStateStrings {
-			if name == tu {
-				state = PeerState(i)
+		// Convert the map to a slice of structs.
+		// This should be fixed so ALL functions return structs... eventually...
+		response = make([]PeerStats, 0)
+		for _, peer := range data["peers"].([]interface{}) {
+			info := peer.(map[string]interface{})
+
+			// Convert the int to a bool
+			var incoming bool
+			if info["isIncoming"].(int64) > 0 {
+				incoming = true
 			}
-		}
-		// Convert the last packet received timestamp to a time.Time
-		last := time.Unix(0, info["last"].(int64)*1000000)
 
-		peer := PeerStats{
-			Last:        last,
-			BytesIn:     info["bytesIn"].(int64),
-			BytesOut:    info["bytesOut"].(int64),
-			IsIncoming:  incoming,
-			State:       state,
-			PublicKey:   info["publicKey"].(string),
-			SwitchLabel: info["switchLabel"].(string),
+			// Convert connection state to an int
+			var state PeerState
+			tu := strings.ToUpper(info["state"].(string))
+			for i, name := range peerStateStrings {
+				if name == tu {
+					state = PeerState(i)
+				}
+			}
+			// Convert the last packet received timestamp to a time.Time
+			last := time.Unix(0, info["last"].(int64)*1000000)
+
+			peer := PeerStats{
+				Last:        last,
+				BytesIn:     info["bytesIn"].(int64),
+				BytesOut:    info["bytesOut"].(int64),
+				IsIncoming:  incoming,
+				State:       state,
+				PublicKey:   info["publicKey"].(string),
+				SwitchLabel: info["switchLabel"].(string),
+			}
+			response = append(response, peer)
+
 		}
-		response = append(response, peer)
+		if more = (data["more"] != nil); more {
+			page++
+		}
 	}
 	return
 }
