@@ -23,6 +23,7 @@ type CjdnsAdminConfig struct {
 	Addr     string `json:"addr"`
 	Port     int    `json:"port"`
 	Password string `json:"password"`
+	Config   string `json:"config,omitempty"`
 }
 
 // Contains the admin info for connecting to cjdns
