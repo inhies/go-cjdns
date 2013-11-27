@@ -17,8 +17,8 @@ type Route struct {
 	Link    float64
 	Path    string
 	Version int64
-	rawLink int64
-	rawPath uint64
+	RawLink int64
+	RawPath uint64
 }
 
 type Routes []*Route
@@ -28,12 +28,12 @@ func (rs Routes) Swap(i, j int) { rs[i], rs[j] = rs[j], rs[i] }
 
 /*
 func (rs Routes) parsePaths() {
-	if rs[0].rawPath != 0 {
+	if rs[0].RawPath != 0 {
 		return
 	}
 	for _, r := range rs {
 		h, _ := hex.DecodeString(strings.Replace(r.Path, ".", "", -1))
-		r.rawPath = binary.BigEndian.Uint64(h)
+		r.RawPath = binary.BigEndian.Uint64(h)
 	}
 }
 */
@@ -49,7 +49,7 @@ func (r Routes) SortByPath() {
 
 type byPath struct{ Routes }
 
-func (s byPath) Less(i, j int) bool { return s.Routes[i].rawPath < s.Routes[j].rawPath }
+func (s byPath) Less(i, j int) bool { return s.Routes[i].RawPath < s.Routes[j].RawPath }
 
 // SortByQuality sorts Routes by link quality.
 func (r Routes) SortByQuality() {
@@ -83,7 +83,7 @@ func isBehind(destination, midPath uint64) bool {
 
 // IsBehind returns true if packets destined for Route go through the specified node.
 func (r *Route) IsBehind(node *Route) bool {
-	return isBehind(r.rawPath, node.rawPath)
+	return isBehind(r.RawPath, node.RawPath)
 }
 
 // Return true if destination is 1 hop away from midPath
@@ -112,7 +112,7 @@ func (rs Routes) Hops(path string) (hops Routes) {
 	p := binary.BigEndian.Uint64(h)
 	//rs.parsePaths()
 	for _, r := range rs {
-		if isBehind(p, r.rawPath) {
+		if isBehind(p, r.RawPath) {
 			hops = append(hops, r)
 		}
 	}
@@ -157,8 +157,8 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 				IP:      r["ip"].(string),
 				Link:    float64(r["link"].(int64)) / magicalLinkConstant,
 				Path:    rPath,
-				rawPath: path,
-				rawLink: r["link"].(int64),
+				RawPath: path,
+				RawLink: r["link"].(int64),
 			})
 
 		}
@@ -199,9 +199,9 @@ func (a *Admin) NodePeers(IP string) (directPeers Routes, err error) {
 				continue
 			}
 			fmt.Println("looking at", nodeB.IP, nodeB.Path)
-			if isOneHop(nodeA.rawPath, nodeB.rawPath) || isOneHop(nodeB.rawPath, nodeA.rawPath) {
+			if isOneHop(nodeA.RawPath, nodeB.RawPath) || isOneHop(nodeB.RawPath, nodeA.RawPath) {
 				fmt.Println(nodeA.Path, "is next to", nodeB.Path)
-				if previous, ok := m[nodeB.IP]; !ok || previous.rawPath > nodeB.rawPath {
+				if previous, ok := m[nodeB.IP]; !ok || previous.RawPath > nodeB.RawPath {
 					m[nodeB.IP] = nodeB
 				}
 			}
