@@ -16,6 +16,7 @@ type Route struct {
 	IP      string
 	Link    float64
 	Path    string
+	Version int64
 	rawLink int64
 	rawPath uint64
 }
