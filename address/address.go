@@ -58,6 +58,9 @@ func CheckPubKey(in []byte) bool {
 // Fills out an IPv6 address to the full 32 bytes
 // Usefull for string comparisons
 func PadIPv6(truncated string) (full string) {
+	if len(truncated) == 39 {
+		return truncated
+	}
 	full = truncated[:4]
 	for _, couplet := range strings.SplitN(truncated[5:], ":", 7) {
 		if len(couplet) == 4 {
