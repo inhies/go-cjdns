@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 //RouterModule_lookup returns a single path for an address. Not sure what this is used for
 func (c *Conn) RouterModule_lookup(address string) (response map[string]interface{}, err error) {

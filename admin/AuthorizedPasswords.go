@@ -1,6 +1,4 @@
-package cjdns
-
-
+package admin
 
 //AuthorizedPasswords_add(password, user, authType='')
 //AuthorizedPasswords_list()

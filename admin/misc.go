@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 import (
 	"fmt"

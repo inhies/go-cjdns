@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 // Subscribes you to receive logging updates based on the parameters that are set.
 // Returns a map[string]interface channel where all logging data will be sent

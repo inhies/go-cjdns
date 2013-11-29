@@ -1,5 +1,5 @@
-// Package cjdns provides easy methods to the cjdns admin interface
-package cjdns
+// Package admin provides easy methods to the cjdns admin interface
+package admin
 
 import (
 	"crypto/sha256"

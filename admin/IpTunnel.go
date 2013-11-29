@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 // IpTunnel_listConnections returns a list of all current IP tunnels
 func (c *Conn) IpTunnel_listConnections() (response map[string]interface{}, err error) {

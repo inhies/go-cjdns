@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 // Security_noFiles removes the ability to create new files from cjdns.
 // It is recommended to always set this.

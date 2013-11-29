@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 //ETHInterface_beacon will set the specified beacon state on the specified interface
 //State is any of the following:

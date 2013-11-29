@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 // Core_exit tells cjdns to shutdown
 func (c *Conn) Core_exit() (response map[string]interface{}, err error) {

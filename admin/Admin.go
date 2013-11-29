@@ -1,4 +1,4 @@
-package cjdns
+package admin
 
 // GetFunctions returns all available functions that cjdns supports
 func (c *Conn) Admin_availableFunctions() (functions map[string]string, err error) {
