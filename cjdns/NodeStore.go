@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -14,11 +15,22 @@ var (
 
 type Route struct {
 	IP      string
-	Link    float64
-	Path    string
 	Version int64
-	RawLink int64
-	RawPath uint64
+	Link    Link
+	Path    Path
+}
+
+type (
+	Link int64
+	Path uint64
+)
+
+func (l Link) String() string {
+	return strconv.FormatUint(uint64(l), 10)
+}
+
+func (p Path) String() string {
+	return strconv.FormatInt(int64(p), 10)
 }
 
 type Routes []*Route
@@ -28,12 +40,12 @@ func (rs Routes) Swap(i, j int) { rs[i], rs[j] = rs[j], rs[i] }
 
 /*
 func (rs Routes) parsePaths() {
-	if rs[0].RawPath != 0 {
+	if rs[0].Path != 0 {
 		return
 	}
 	for _, r := range rs {
 		h, _ := hex.DecodeString(strings.Replace(r.Path, ".", "", -1))
-		r.RawPath = binary.BigEndian.Uint64(h)
+		r.Path = binary.BigEndian.Uint64(h)
 	}
 }
 */
@@ -49,7 +61,7 @@ func (r Routes) SortByPath() {
 
 type byPath struct{ Routes }
 
-func (s byPath) Less(i, j int) bool { return s.Routes[i].RawPath < s.Routes[j].RawPath }
+func (s byPath) Less(i, j int) bool { return s.Routes[i].Path < s.Routes[j].Path }
 
 // SortByQuality sorts Routes by link quality.
 func (r Routes) SortByQuality() {
@@ -73,30 +85,30 @@ func log2x64(in uint64) (out uint) {
 }
 
 // return true if packets destined for destination go through midPath.
-func isBehind(destination, midPath uint64) bool {
+func isBehind(destination, midPath Path) bool {
 	if midPath > destination {
 		return false
 	}
-	mask := ^uint64(0) >> (64 - log2x64(midPath))
-	return (destination & mask) == (midPath & mask)
+	mask := ^uint64(0) >> (64 - log2x64(uint64(midPath)))
+	return (uint64(destination) & mask) == (uint64(midPath) & mask)
 }
 
 // IsBehind returns true if packets destined for Route go through the specified node.
 func (r *Route) IsBehind(node *Route) bool {
-	return isBehind(r.RawPath, node.RawPath)
+	return isBehind(r.Path, node.Path)
 }
 
 // Return true if destination is 1 hop away from midPath
 // WARNING: this depends on implementation quirks of the router and will be broken in the future.
 // NOTE: This may have false positives which isBehind() will remove.
-func isOneHop(destination, midPath uint64) bool {
+func isOneHop(destination, midPath Path) bool {
 	if !isBehind(destination, midPath) {
 		return false
 	}
 
 	// The "why" is here:
 	// http://gitboria.com/cjd/cjdns/tree/master/switch/NumberCompress.h#L143
-	c := destination >> log2x64(midPath)
+	c := uint64(destination) >> log2x64(uint64(midPath))
 	if c&1 != 0 {
 		return log2x64(c) == 4
 	}
@@ -112,7 +124,7 @@ func (rs Routes) Hops(path string) (hops Routes) {
 	p := binary.BigEndian.Uint64(h)
 	//rs.parsePaths()
 	for _, r := range rs {
-		if isBehind(p, r.RawPath) {
+		if isBehind(Path(p), r.Path) {
 			hops = append(hops, r)
 		}
 	}
@@ -154,11 +166,9 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 			}
 			path := binary.BigEndian.Uint64(bPath)
 			routingTable = append(routingTable, &Route{
-				IP:      r["ip"].(string),
-				Link:    float64(r["link"].(int64)) / magicalLinkConstant,
-				Path:    rPath,
-				RawPath: path,
-				RawLink: r["link"].(int64),
+				IP:   r["ip"].(string),
+				Path: Path(path),
+				Link: r["link"].(Link),
 			})
 
 		}
@@ -199,9 +209,9 @@ func (a *Admin) NodePeers(IP string) (directPeers Routes, err error) {
 				continue
 			}
 			fmt.Println("looking at", nodeB.IP, nodeB.Path)
-			if isOneHop(nodeA.RawPath, nodeB.RawPath) || isOneHop(nodeB.RawPath, nodeA.RawPath) {
+			if isOneHop(nodeA.Path, nodeB.Path) || isOneHop(nodeB.Path, nodeA.Path) {
 				fmt.Println(nodeA.Path, "is next to", nodeB.Path)
-				if previous, ok := m[nodeB.IP]; !ok || previous.RawPath > nodeB.RawPath {
+				if previous, ok := m[nodeB.IP]; !ok || previous.Path > nodeB.Path {
 					m[nodeB.IP] = nodeB
 				}
 			}
