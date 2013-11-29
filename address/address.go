@@ -1,4 +1,4 @@
-package cjdns
+package address
 
 import (
 	"crypto/sha512"
