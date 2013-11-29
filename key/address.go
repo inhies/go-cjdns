@@ -1,4 +1,4 @@
-package address
+package key
 
 import (
 	"crypto/sha512"
