@@ -1,12 +1,25 @@
 package key
 
 import (
+	"crypto/sha512"
 	"fmt"
 )
 
 var (
 	ErrInvalidPubKey = fmt.Errorf("Invalid public key supplied")
 )
+
+// Hashes the supplied array twice and return the resulting byte slice.
+func hashTwice(b [32]byte) []byte {
+	var ip []byte
+	h := sha512.New()
+	h.Write(b[:])
+	ip = h.Sum(ip[:0])
+	h.Reset()
+	h.Write(ip)
+	ip = h.Sum(ip[:0])[0:16]
+	return ip
+}
 
 // Returns the string representation of the public key ("<hex stuff>.k")
 func makeString(k [32]byte) string {

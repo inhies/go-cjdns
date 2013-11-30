@@ -1,41 +1,23 @@
 package key
 
 import (
-	"crypto/sha512"
 	"net"
 )
 
-type (
-	// Represents a cjdns public key.
-	Public struct {
-		Key     [32]byte // Raw public key, used for doing crypto
-		Encoded string   // String representation ending in .k
-		IPv6    net.IP   // IPv6 address
-	}
-)
-
-// Takes a raw public key and returns a new Public
-func NewPublicFromBytes(key [32]byte) (*Public, error) {
-	var err error
-	keyOut := &Public{Key: key}
-	keyOut.Encoded = makeString(key) + ".k"
-	keyOut.IPv6, err = keyOut.makeIPv6()
-	if err != nil {
-		return nil, err
-	}
-	return keyOut, nil
-}
+// Represents a cjdns public key.
+type Public [32]byte
 
 // Takes the string representation of a public key and returns a new Public
-func NewPublicFromString(key string) (*Public, error) {
-	keyIn := key
+func DecodePublic(key string) (*Public, error) {
 	raw := []byte{}
 	out := [32]byte{}
+
 	// Check for the trailing .k
-	if key[len(key)-2] == '.' && key[len(key)-1] == 'k' {
+	if key[len(key)-2:] == ".k" {
 		key = key[0 : len(key)-2]
 	}
 
+	// Decode the key
 	var wide, bits uint
 	var i2b = []byte("0123456789bcdfghjklmnpqrstuvwxyz")
 	var b2i = func() []byte {
@@ -62,31 +44,38 @@ func NewPublicFromString(key string) (*Public, error) {
 	if wide != 0 {
 		return nil, ErrInvalidPubKey
 	}
-	copy(out[:], raw[:])
 
-	var err error
-	keyOut := &Public{Key: out}
-	keyOut.Encoded = keyIn
-	keyOut.IPv6, err = keyOut.makeIPv6()
-	if err != nil {
-		return nil, err
+	// Convert the slice to an array
+	copy(out[:], raw[:])
+	keyOut := Public(out)
+
+	// Check the key for validitiy
+	if !keyOut.Valid() {
+		return nil, ErrInvalidPubKey
 	}
-	return keyOut, nil
+
+	return &keyOut, nil
+}
+
+// Returns true if k is a valid public key.
+func (k *Public) Valid() bool {
+	// It's a valid key if the IP address begins with FC
+	v := hashTwice(*k)
+	return v[0] == 0xFC
+}
+
+// Returns the public key in base32 format ending with .k
+func (k *Public) String() string {
+	return makeString(*k) + ".k"
+}
+
+// Retusn the cjdns IPv6 address of the key.
+func (k *Public) IP() net.IP {
+	return k.makeIPv6()
 }
 
 // Returns a string containing the IPv6 address for the public key
-func (k Public) makeIPv6() (net.IP, error) {
-	// Do the hashing that generates the IP
-	var out []byte
-	h := sha512.New()
-	h.Write(k.Key[:])
-	out = h.Sum(out[:0])
-	h.Reset()
-	h.Write(out)
-	out = h.Sum(out[:0])[0:16]
-	if out[0] != 0xFC {
-		return nil, ErrInvalidPubKey
-	}
-	ip := net.IP(out)
-	return ip, nil
+func (k *Public) makeIPv6() net.IP {
+	out := hashTwice(*k)
+	return net.IP(out)
 }
