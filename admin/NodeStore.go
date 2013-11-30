@@ -9,24 +9,22 @@ import (
 	"strings"
 )
 
-var (
-	magicalLinkConstant = 5366870.0 //Determined by cjd way back in the dark ages.
-)
+const magicalLinkConstant = 5366870 //Determined by cjd way back in the dark ages.
 
 type Route struct {
 	IP      string
-	Version int64
 	Link    Link
 	Path    Path
+	Version int
 }
 
 type (
-	Link int64
+	Link uint32
 	Path uint64
 )
 
 func (l Link) String() string {
-	return strconv.FormatUint(uint64(l), 10)
+	return strconv.FormatUint(uint64(l)/magicalLinkConstant, 10)
 }
 
 func (p Path) String() string {
@@ -166,11 +164,11 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 			}
 			path := binary.BigEndian.Uint64(bPath)
 			routingTable = append(routingTable, &Route{
-				IP:   r["ip"].(string),
-				Path: Path(path),
-				Link: r["link"].(Link),
+				IP:      r["ip"].(string),
+				Link:    Link(r["link"].(int64)),
+				Path:    Path(path),
+				Version: int(r["version"].(int64)),
 			})
-
 		}
 
 		if more = (response["more"] != nil); more {
