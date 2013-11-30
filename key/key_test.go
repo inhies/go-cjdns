@@ -28,13 +28,17 @@ var (
 	}
 )
 
-func Test_GeneratePrivate(t *testing.T) {
+func Test_Generate(t *testing.T) {
 	Convey("After generating a new random key", t, func() {
 		key := Generate()
 		key_public := key.Pubkey()
 
 		Convey("It should create a valid Public key", func() {
 			So(key_public.Valid(), ShouldBeTrue)
+		})
+
+		Convey("The IP address should start with FC", func() {
+			So(key_public.IP()[0], ShouldEqual, 0xFC)
 		})
 	})
 }
@@ -76,7 +80,7 @@ func Test_DecodePrivate(t *testing.T) {
 	})
 }
 
-func Test_PubkeyFromString(t *testing.T) {
+func Test_DecodePublic(t *testing.T) {
 	Convey("Given a pubkey string", t, func() {
 		key, err := DecodePublic(pubkeyString)
 		Convey("It should convert to a Pubkey type", func() {
