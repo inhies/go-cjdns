@@ -1,4 +1,5 @@
-// Package config allows easy loading, manipulation, and saving of cjdns configuration files.
+// Package config allows easy loading, manipulation, and saving of cjdns
+// configuration files.
 package config
 
 import (
@@ -10,7 +11,8 @@ import (
 	"regexp"
 )
 
-// Loads and parses the input file and returns a Config structure with the minimal cjdroute.conf file requirements.
+// Loads and parses the input file and returns a Config structure with the
+// minimal cjdroute.conf file requirements.
 func LoadMinConfig(filein string) (*Config, error) {
 
 	//Load the raw JSON data from the file
@@ -19,13 +21,15 @@ func LoadMinConfig(filein string) (*Config, error) {
 		return nil, err
 	}
 
-	//Parse the JSON in to our struct which supports all requried fields for cjdns
+	// Parse the JSON in to our struct which supports all requried fields for
+	// cjdns
 	structured, err := parseJSONStruct(raw)
 	if err != nil {
 		// BUG(inhies): Find a better way of dealing with these errors.
 		if e, ok := err.(*json.SyntaxError); ok {
-			// BUG(inhies): Instead of printing x amount of characters, print the previous and following 2 lines
-			fmt.Println("Invalid JSON") //" at byte", e.Offset, "(after stripping comments...)")
+			// BUG(inhies): Instead of printing x amount of characters, print
+			// the previous and following 2 lines
+			fmt.Println("Invalid JSON")
 			fmt.Println("----------------------------------------")
 			fmt.Println(string(raw[e.Offset-60 : e.Offset+60]))
 			fmt.Println("----------------------------------------")
@@ -69,7 +73,8 @@ func LoadMinConfig(filein string) (*Config, error) {
 	return &structured, nil
 }
 
-// Loads and parses the input file and returns a map with all data found in the config file, including non-standard fields.
+// Loads and parses the input file and returns a map with all data found in the
+// config file, including non-standard fields.
 func LoadExtConfig(filein string) (map[string]interface{}, error) {
 
 	//Load the raw JSON data from the file
@@ -87,15 +92,18 @@ func LoadExtConfig(filein string) (map[string]interface{}, error) {
 	return object, nil
 }
 
-// Saves either of the two config types to the specified file with the specified permissions.
+// Saves either of the two config types to the specified file with the
+// specified permissions.
 func SaveConfig(fileout string, config interface{}, perms os.FileMode) error {
 
-	//check to see if we got a struct or a map (minimal or extended config, respectively)
+	// check to see if we got a struct or a map (minimal or extended config,
+	// respectively)
 	v := reflect.ValueOf(config)
 	if v.Kind() == reflect.Struct {
 		config := config.(Config)
 
-		//Parse the nicely formatted security section, and set the raw values for JSON marshalling
+		// Parse the nicely formatted security section, and set the raw values
+		// for JSON marshalling
 		newSecurity := make([]interface{}, 0)
 		if config.Security.NoFiles {
 			newSecurity = append(newSecurity, "nofiles")
@@ -184,7 +192,8 @@ func fixJSON(in interface{}) interface{} {
 	return in
 }
 
-// Replaces all C-style comments (prefixed with "//" and inside "/* */") with empty strings. This is necessary in parsing JSON files that contain them.
+// Replaces all C-style comments (prefixed with "//" and inside "/* */") with
+// empty strings. This is necessary in parsing JSON files that contain them.
 // Returns b without comments. Credit to SashaCrofter, thanks!
 func stripComments(b []byte) ([]byte, error) {
 	regComment, err := regexp.Compile("(?s)//.*?\n|/\\*.*?\\*/")
