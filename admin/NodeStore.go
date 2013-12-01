@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ type Route struct {
 
 type (
 	Link uint32
-	Path uint64
+	Path int64
 )
 
 func (l Link) String() string {
@@ -28,7 +29,32 @@ func (l Link) String() string {
 }
 
 func (p Path) String() string {
-	return strconv.FormatInt(int64(p), 10)
+	str := strconv.FormatInt(int64(p), 10)
+	str = strings.Repeat("0", 16-len(str)) + str
+	var out string
+	for i, s := range str {
+		if i > 0 && i%4 == 0 {
+			out += "."
+		}
+		out += string(s)
+	}
+	return out
+}
+
+func ParsePath(path string) Path {
+	sPath := strings.Replace(path, ".", "", -1)
+	fmt.Println(sPath)
+	bPath, err := hex.DecodeString(sPath)
+	if err != nil || len(bPath) != 8 {
+		fmt.Println("ERROR", err)
+		//If we get an error, or the
+		//path is not 64 bits, discard.
+		//This should also prevent
+		//runtime errors.
+		return 0
+	}
+	return Path(binary.BigEndian.Uint64(bPath))
+
 }
 
 type Routes []*Route
@@ -152,21 +178,10 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 		rawTable := response["routingTable"].([]interface{})
 		for i := range rawTable {
 			r := rawTable[i].(map[string]interface{})
-			rPath := r["path"].(string)
-			sPath := strings.Replace(rPath, ".", "", -1)
-			bPath, err := hex.DecodeString(sPath)
-			if err != nil || len(bPath) != 8 {
-				//If we get an error, or the
-				//path is not 64 bits, discard.
-				//This should also prevent
-				//runtime errors.
-				continue
-			}
-			path := binary.BigEndian.Uint64(bPath)
 			routingTable = append(routingTable, &Route{
 				IP:      r["ip"].(string),
 				Link:    Link(r["link"].(int64)),
-				Path:    Path(path),
+				Path:    ParsePath(r["path"].(string)),
 				Version: int(r["version"].(int64)),
 			})
 		}
