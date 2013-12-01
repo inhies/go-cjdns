@@ -38,13 +38,16 @@ func (s PeerState) Int() int {
 
 // Peer statistics
 type PeerStats struct {
-	PublicKey   string    // Public key of peer
-	SwitchLabel string    // Internal switch label for reaching the peer
-	IsIncoming  bool      // Is the peer connected to us, or us to them
-	BytesOut    int64     // Total number of bytes sent
-	BytesIn     int64     // Total number of bytes received
-	State       PeerState // Peer connection state
-	Last        time.Time // Last time a packet was received from the peer
+	PublicKey          string    // Public key of peer
+	SwitchLabel        string    // Internal switch label for reaching the peer
+	IsIncoming         bool      // Is the peer connected to us, or us to them
+	BytesOut           int64     // Total number of bytes sent
+	BytesIn            int64     // Total number of bytes received
+	State              PeerState // Peer connection state
+	Last               time.Time // Last time a packet was received from the peer
+	ReceivedOutOfRange int64
+	Duplicates         int64
+	LostPackets        int64
 }
 
 // Returns stats on currently connected peers
@@ -96,13 +99,16 @@ func (c *Conn) InterfaceController_peerStats() (
 			last := time.Unix(0, info["last"].(int64)*1000000)
 
 			peer := PeerStats{
-				Last:        last,
-				BytesIn:     info["bytesIn"].(int64),
-				BytesOut:    info["bytesOut"].(int64),
-				IsIncoming:  incoming,
-				State:       state,
-				PublicKey:   info["publicKey"].(string),
-				SwitchLabel: info["switchLabel"].(string),
+				Last:               last,
+				BytesIn:            info["bytesIn"].(int64),
+				BytesOut:           info["bytesOut"].(int64),
+				IsIncoming:         incoming,
+				State:              state,
+				PublicKey:          info["publicKey"].(string),
+				SwitchLabel:        info["switchLabel"].(string),
+				ReceivedOutOfRange: info["receivedOutOfRange"].(int64),
+				Duplicates:         info["duplicates"].(int64),
+				LostPackets:        info["lostPackets"].(int64),
 			}
 			response = append(response, peer)
 
