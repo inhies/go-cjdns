@@ -39,7 +39,7 @@ func (s PeerState) Int() int {
 // Peer statistics
 type PeerStats struct {
 	PublicKey          string    // Public key of peer
-	SwitchLabel        string    // Internal switch label for reaching the peer
+	SwitchLabel        Path      // Internal switch label for reaching the peer
 	IsIncoming         bool      // Is the peer connected to us, or us to them
 	BytesOut           int64     // Total number of bytes sent
 	BytesIn            int64     // Total number of bytes received
@@ -105,7 +105,7 @@ func (c *Conn) InterfaceController_peerStats() (
 				IsIncoming:         incoming,
 				State:              state,
 				PublicKey:          info["publicKey"].(string),
-				SwitchLabel:        info["switchLabel"].(string),
+				SwitchLabel:        ParsePath(info["switchLabel"].(string)),
 				ReceivedOutOfRange: info["receivedOutOfRange"].(int64),
 				Duplicates:         info["duplicates"].(int64),
 				LostPackets:        info["lostPackets"].(int64),
