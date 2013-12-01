@@ -7,7 +7,9 @@ import (
 )
 
 func main() {
-	Pretty := pretty.Config{PrintStringers: true}
+	Pretty := pretty.Config{
+		PrintStringers: true,
+	}
 	conn, err := admin.Connect(nil)
 	if err != nil {
 		fmt.Println(err)
