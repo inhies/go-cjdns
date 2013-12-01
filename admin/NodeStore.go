@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -43,10 +42,8 @@ func (p Path) String() string {
 
 func ParsePath(path string) Path {
 	sPath := strings.Replace(path, ".", "", -1)
-	fmt.Println(sPath)
 	bPath, err := hex.DecodeString(sPath)
 	if err != nil || len(bPath) != 8 {
-		fmt.Println("ERROR", err)
 		//If we get an error, or the
 		//path is not 64 bits, discard.
 		//This should also prevent
