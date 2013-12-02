@@ -69,6 +69,17 @@ func (k *Public) String() string {
 	return makeString(*k) + ".k"
 }
 
+// Implements the encoding.TextMarshaler interface
+func (k *Public) MarshalText() ([]byte, error) {
+	return []byte(makeString(*k) + ".k"), nil
+}
+
+// Implements the encoding.TextUnmarshaler interface
+func (k *Public) UnmarshalText(text []byte) (err error) {
+	k, err = DecodePublic(string(text))
+	return
+}
+
 // Retusn the cjdns IPv6 address of the key.
 func (k *Public) IP() net.IP {
 	return k.makeIPv6()
