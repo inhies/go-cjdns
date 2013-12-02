@@ -72,6 +72,17 @@ func (k *Private) String() string {
 	return hex.EncodeToString(k[:])
 }
 
+// Implements the encoding.TextMarshaler interface
+func (k *Private) MarshalText() ([]byte, error) {
+	return []byte(makeString(*k) + ".k"), nil
+}
+
+// Implements the encoding.TextUnmarshaler interface
+func (k *Private) UnmarshalText(text []byte) (err error) {
+	k, err = DecodePrivate(string(text))
+	return
+}
+
 // Returns the associated public key for the supplied private key.
 func (k *Private) Pubkey() *Public {
 	return k.makePub()
