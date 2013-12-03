@@ -1,7 +1,6 @@
 package key
 
 import (
-	"fmt"
 	"net"
 )
 
@@ -71,15 +70,13 @@ func (k *Public) String() string {
 }
 
 // Implements the encoding.TextMarshaler interface
-func (k Public) MarshalJSON() ([]byte, error) {
-	fmt.Println("marshalling!")
-	return []byte("\"" + makeString(k) + ".k\""), nil
+func (k *Public) MarshalText() ([]byte, error) {
+	return []byte(makeString(*k) + ".k"), nil
 }
 
 // Implements the encoding.TextUnmarshaler interface
-func (k Public) UnmarshalText(text []byte) (err error) {
-	key, err := DecodePublic(string(text))
-	k = *key
+func (k *Public) UnmarshalText(text []byte) (err error) {
+	k, err = DecodePublic(string(text))
 	return
 }
 

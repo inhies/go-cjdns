@@ -74,7 +74,9 @@ func (k *Private) String() string {
 
 // Implements the encoding.TextMarshaler interface
 func (k *Private) MarshalText() ([]byte, error) {
-	return []byte(makeString(*k) + ".k"), nil
+	out := make([]byte, 64)
+	hex.Encode(out, k[:])
+	return out, nil
 }
 
 // Implements the encoding.TextUnmarshaler interface
