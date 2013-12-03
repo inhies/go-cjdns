@@ -31,12 +31,10 @@ func Generate() *Private {
 Start:
 	rand.Read(privkey[:])
 
-	/*
-		    // not sure if needed
-			key[0] &= 248
-			key[31] &= 127
-			key[31] |= 64
-	*/
+	privkey[0] &= 248
+	privkey[31] &= 127
+	privkey[31] |= 64
+
 	pubkey := privkey.makePub()
 
 	// Loop until we get a private key that will create a valid IPv6 address.
