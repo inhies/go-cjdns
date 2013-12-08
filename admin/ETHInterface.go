@@ -1,47 +1,63 @@
 package admin
 
-//ETHInterface_beacon will set the specified beacon state on the specified interface
-//State is any of the following:
-//0 -- Disabled.
-//1 -- Accept beacons, this will cause cjdns to accept incoming
-//beacon messages and try connecting to the sender.
-//2 -- Accept and send beacons, this will cause cjdns to broadcast
-//messages on the local network which contain a randomly
-//generated per-session password, other nodes which have this
-//set to 1 or 2 will hear the beacon messages and connect
-//automatically.
-func (c *Conn) ETHInterface_beacon(iface int, state int) (response map[string]interface{}, err error) {
-	args := make(map[string]interface{})
-	args["interfaceNumber"] = iface
-	args["state"] = state
-	response, err = SendCmd(c, "ETHInterface_beacon", args)
-	if err != nil {
-		return
+const (
+	BeaconDisable       = 0 //  No beacons are sent and incoming beacon messages are discarded.
+	BeaconAccept        = 1 //  No beacons are sent but if an incoming beacon is received, it is acted upon.
+	BeaconAcceptAndSend = 2 // Beacons are sent and accepted.
+)
+
+// ETHInterface_new creates a new ETHInterface and bind it to a device.
+// Use the returned iface number with ETHInterface_beginConnection and
+// ETHInterface_beacon.
+func (c *Conn) ETHInterface_new(device string) (iface int, err error) {
+	args := &struct {
+		BindDevice string `bencode:"bindDevice"`
+	}{device}
+
+	resp := new(struct{ InterfaceNumber int })
+
+	pack, err := c.sendCmd(&request{AQ: "ETHInterface_new", Args: args})
+	if err == nil {
+		err = pack.Decode(resp)
 	}
-	return
+	return resp.InterfaceNumber, err
 }
 
-//Initiates a connection to the specified node
-func (c *Conn) ETHInterface_beginConnection(iface int, mac string, pass string, pubkey string) (response map[string]interface{}, err error) {
-	args := make(map[string]interface{})
-	args["interfaceNumber"] = iface
-	args["macAddress"] = mac
-	args["password"] = pass
-	args["publicKey"] = pubkey
-	response, err = SendCmd(c, "ETHInterface_beginConnection", args)
-	if err != nil {
-		return
-	}
-	return
+// ETHInterface_beginConnection connects an ETHInterface to another computer which has an ETHInterface running.
+// Use iface 0 for the first interface.
+func (c *Conn) ETHInterface_beginConnection(iface int, mac, pass, pubkey string) error {
+	args := &struct {
+		InterfaceNumber int    `bencode:"interfaceNumber"`
+		Password        string `bencode:"password"`
+		MacAddress      string `bencode:"MacAddress"`
+		PublicKey       string `bencode:"publicKey"`
+	}{iface, pass, mac, pubkey}
+	_, err := c.sendCmd(&request{AQ: "ETHInterface_beginConnection", Args: args})
+	return err
 }
 
-//ETHInterface_new creates a new ethernet interface
-func (c *Conn) ETHInterface_new(device string) (response map[string]interface{}, err error) {
-	args := make(map[string]interface{})
-	args["bindDevice"] = device
-	response, err = SendCmd(c, "ETHInterface_new", args)
-	if err != nil {
-		return
+// ETHInterface_beacon enables or disables sending or receiving of  ETHInterface beacon messages.
+// ETHInterface uses periodic beacon messages to automatically peer nodes which are on the same LAN.
+// Be mindful that if your lan has is open wifi, enabling beaconing will allow anyone to peer with you.
+//
+// interfaceNumber is the number of the ETHInterface to change the state of. Use 0 for the first interface.
+//
+// state is the state to switch to, if -1 the current state will be queried only.
+// See BeaconDisable, BeaconAccept, and BeaconAcceptAndSend.
+func (c *Conn) ETHInterface_beacon(iface int, state int) (currentState int, stateDescription string, err error) {
+	args := &struct {
+		InterfaceNumber int `bencode:"interfaceNumber"`
+		State           int `bencode:"state"`
+	}{iface, state}
+
+	resp := new(struct {
+		State     int
+		StateName string
+	})
+
+	pack, err := c.sendCmd(&request{AQ: "ETHInterface_beacon", Args: args})
+	if err == nil {
+		err = pack.Decode(resp)
 	}
-	return
+	return resp.State, resp.StateName, err
 }

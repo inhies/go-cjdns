@@ -1,12 +1,17 @@
 package admin
 
 // IpTunnel_listConnections returns a list of all current IP tunnels
-func (c *Conn) IpTunnel_listConnections() (response map[string]interface{}, err error) {
-	response, err = SendCmd(c, "IpTunnel_listConnections", nil)
-	if err != nil {
-		return
+func (c *Conn) IpTunnel_listConnections() (tunnelIndexes []int, err error) {
+	resp := new(struct {
+		List []int
+	})
+
+	var pack *packet
+	pack, err = c.sendCmd(&request{AQ: "IpTunnel_listConnections"})
+	if err == nil {
+		err = pack.Decode(resp)
 	}
-	return
+	return resp.List, err
 }
 
 //IpTunnel_allowConnection(publicKeyOfAuthorizedNode, ip6Address=0, ip4Address=0)

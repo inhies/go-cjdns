@@ -1,11 +1,11 @@
 package admin
 
+/*
 import (
-	"fmt"
-	"github.com/inhies/go-cjdns/key"
-	"strings"
-	"time"
+	//"github.com/inhies/go-cjdns/key"
+	//"time"
 )
+*/
 
 type PeerState int
 
@@ -17,6 +17,7 @@ const (
 	Unresponsive
 )
 
+/*
 var (
 	peerStateStrings = [4]string{
 		"UNAUTHENTICATED",
@@ -25,7 +26,9 @@ var (
 		"UNRESPONSIVE",
 	}
 )
+*/
 
+/*
 func (s PeerState) String() string {
 	if s.Int() < 0 || s.Int() > len(peerStateStrings)-1 {
 		return "INVALID"
@@ -36,93 +39,57 @@ func (s PeerState) String() string {
 func (s PeerState) Int() int {
 	return int(s)
 }
+*/
 
 // Peer statistics
 type PeerStats struct {
-	PublicKey          *key.Public // Public key of peer
-	SwitchLabel        Path        // Internal switch label for reaching the peer
-	IsIncoming         bool        // Is the peer connected to us, or us to them
-	BytesOut           int64       // Total number of bytes sent
-	BytesIn            int64       // Total number of bytes received
-	State              PeerState   // Peer connection state
-	Last               time.Time   // Last time a packet was received from the peer
-	ReceivedOutOfRange int64
-	Duplicates         int64
-	LostPackets        int64
+	PublicKey          string // Public key of peer
+	SwitchLabel        string // Internal switch label for reaching the peer
+	IsIncoming         bool   // Is the peer connected to us, or us to them
+	BytesOut           int    // Total number of bytes sent
+	BytesIn            int    // Total number of bytes received
+	State              string // Peer connection state
+	Last               int64  // Last time a packet was received from the peer
+	ReceivedOutOfRange int
+	Duplicates         int
+	LostPackets        int
 }
 
+//PublicKey          *key.Public // Public key of peer
+
 // Returns stats on currently connected peers
-func (c *Conn) InterfaceController_peerStats() (
-	response []PeerStats, err error) {
+func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
+	var (
+		args = new(struct {
+			Page int `bencode:"page"`
+		})
+		req = &request{AQ: "InterfaceController_peerStats", Args: args}
 
-	more := true
-	var page int
-	args := make(map[string]interface{})
-	var data map[string]interface{}
-	response = make([]PeerStats, 0)
+		resp = new(struct {
+			More  bool
+			Peers []*PeerStats //`bencode:"peers"`
+			//Total int
+		})
 
-	for more {
-		args["page"] = page
+		pack *packet
+		err  error
+	)
 
-		data, err = SendCmd(c, "InterfaceController_peerStats", args)
+	resp.More = true
+	for resp.More {
+		resp.More = false
+		if pack, err = c.sendCmd(req); err == nil {
+			err = pack.Decode(resp)
+		}
 		if err != nil {
-			return
+			break
 		}
-
-		if e, ok := data["error"]; ok {
-			if e.(string) != "none" {
-				err = fmt.Errorf("InterfaceController_peerStats: " + e.(string))
-				return
-			}
-		}
-
-		// Convert the map to a slice of structs.
-		// This should be fixed so ALL functions return structs... eventually...
-		for _, peer := range data["peers"].([]interface{}) {
-			info := peer.(map[string]interface{})
-
-			// Convert the int to a bool
-			var incoming bool
-			if info["isIncoming"].(int64) > 0 {
-				incoming = true
-			}
-
-			// Convert connection state to an int
-			var state PeerState
-			tu := strings.ToUpper(info["state"].(string))
-			for i, name := range peerStateStrings {
-				if name == tu {
-					state = PeerState(i)
-				}
-			}
-
-			// Convert the last packet received timestamp to a time.Time
-			last := time.Unix(0, info["last"].(int64)*1000000)
-
-			pubKey, err := key.DecodePublic(info["publicKey"].(string))
-			if err != nil {
-				return nil, err
-			}
-			peer := PeerStats{
-				Last:               last,
-				BytesIn:            info["bytesIn"].(int64),
-				BytesOut:           info["bytesOut"].(int64),
-				IsIncoming:         incoming,
-				State:              state,
-				PublicKey:          pubKey,
-				SwitchLabel:        ParsePath(info["switchLabel"].(string)),
-				ReceivedOutOfRange: info["receivedOutOfRange"].(int64),
-				Duplicates:         info["duplicates"].(int64),
-				LostPackets:        info["lostPackets"].(int64),
-			}
-			response = append(response, peer)
-
-		}
-		if more = (data["more"] != nil); more {
-			page++
-		}
+		args.Page++
 	}
-	return
+	if len(resp.Peers) == 0 {
+		println("peers empty")
+	}
+	return resp.Peers, err
 }
 
 //InterfaceController_disconnectPeer(pubkey)

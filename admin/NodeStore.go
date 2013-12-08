@@ -3,44 +3,35 @@ package admin
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-const magicalLinkConstant = 5366870 //Determined by cjd way back in the dark ages.
+const magicalLinkConstant = 5366870 // Determined by cjd way back in the dark ages.
 
 type Route struct {
-	IP      string
-	Link    Link
-	Path    Path
-	Version int
+	SwitchLabel string `bencode:"path"`
+	IP          string
+	Link        Link
+	Path        uint64
+	Version     int
+}
+
+func (r *Route) String() string {
+	return r.SwitchLabel
 }
 
 type (
 	Link uint32
-	Path int64
 )
 
 func (l Link) String() string {
 	return strconv.FormatUint(uint64(l)/magicalLinkConstant, 10)
 }
 
-func (p Path) String() string {
-	str := strconv.FormatInt(int64(p), 10)
-	str = strings.Repeat("0", 16-len(str)) + str
-	var out string
-	for i, s := range str {
-		if i > 0 && i%4 == 0 {
-			out += "."
-		}
-		out += string(s)
-	}
-	return out
-}
-
-func ParsePath(path string) Path {
+func ParsePath(path string) uint64 {
 	sPath := strings.Replace(path, ".", "", -1)
 	bPath, err := hex.DecodeString(sPath)
 	if err != nil || len(bPath) != 8 {
@@ -50,7 +41,7 @@ func ParsePath(path string) Path {
 		//runtime errors.
 		return 0
 	}
-	return Path(binary.BigEndian.Uint64(bPath))
+	return binary.BigEndian.Uint64(bPath)
 
 }
 
@@ -106,12 +97,12 @@ func log2x64(in uint64) (out uint) {
 }
 
 // return true if packets destined for destination go through midPath.
-func isBehind(destination, midPath Path) bool {
+func isBehind(destination, midPath uint64) bool {
 	if midPath > destination {
 		return false
 	}
-	mask := ^uint64(0) >> (64 - log2x64(uint64(midPath)))
-	return (uint64(destination) & mask) == (uint64(midPath) & mask)
+	mask := ^uint64(0) >> (64 - log2x64(midPath))
+	return (destination & mask) == (midPath & mask)
 }
 
 // IsBehind returns true if packets destined for Route go through the specified node.
@@ -122,14 +113,14 @@ func (r *Route) IsBehind(node *Route) bool {
 // Return true if destination is 1 hop away from midPath
 // WARNING: this depends on implementation quirks of the router and will be broken in the future.
 // NOTE: This may have false positives which isBehind() will remove.
-func isOneHop(destination, midPath Path) bool {
+func isOneHop(destination, midPath uint64) bool {
 	if !isBehind(destination, midPath) {
 		return false
 	}
 
 	// The "why" is here:
 	// http://gitboria.com/cjd/cjdns/tree/master/switch/NumberCompress.h#L143
-	c := uint64(destination) >> log2x64(uint64(midPath))
+	c := destination >> log2x64(midPath)
 	if c&1 != 0 {
 		return log2x64(c) == 4
 	}
@@ -140,99 +131,88 @@ func isOneHop(destination, midPath Path) bool {
 }
 
 // Hops returns a Routes object representing a set of hops to a path
-func (rs Routes) Hops(path string) (hops Routes) {
-	h, _ := hex.DecodeString(strings.Replace(path, ".", "", -1))
-	p := binary.BigEndian.Uint64(h)
-	//rs.parsePaths()
-	for _, r := range rs {
-		if isBehind(Path(p), r.Path) {
-			hops = append(hops, r)
+func (rs Routes) Hops(dest *Route) (hops Routes) {
+	for _, node := range rs {
+		if isBehind(dest.Path, node.Path) {
+			hops = append(hops, node)
 		}
 	}
 	return
 }
 
 // NodeStore_dumpTable will return cjdns's routing table.
-func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
-	more := true
-	var page int
-	var response map[string]interface{}
-	for more {
-		args := make(map[string]interface{})
-		args["page"] = page
+func (c *Conn) NodeStore_dumpTable() (Routes, error) {
+	var (
+		args = new(struct {
+			Page int `bencode:"page"`
+		})
+		req = &request{Q: "NodeStore_dumpTable", Args: args}
 
-		response, err = SendCmd(c, "NodeStore_dumpTable", args)
+		resp = new(struct {
+			More bool
+			// skip this for now just to get the function to work
+			RoutingTable Routes
+		})
+
+		pack *packet
+		err  error
+	)
+
+	resp.More = true
+	for resp.More {
+		resp.More = false
+		if pack, err = c.sendCmd(req); err == nil {
+			err = pack.Decode(resp)
+		}
 		if err != nil {
-			return
+			break
 		}
-		if e, ok := response["error"]; ok {
-			if e.(string) != "none" {
-				err = errors.New("NodeStore_dumpTable: " + e.(string))
-				return
-			}
-		}
-
-		rawTable := response["routingTable"].([]interface{})
-		for i := range rawTable {
-			r := rawTable[i].(map[string]interface{})
-			routingTable = append(routingTable, &Route{
-				IP:      r["ip"].(string),
-				Link:    Link(r["link"].(int64)),
-				Path:    ParsePath(r["path"].(string)),
-				Version: int(r["version"].(int64)),
-			})
-		}
-
-		if more = (response["more"] != nil); more {
-			page++
-		}
+		args.Page++
 	}
-	return
+
+	// Now sort through the table
+	for _, r := range resp.RoutingTable {
+		r.Path = ParsePath(r.SwitchLabel)
+	}
+	return resp.RoutingTable, err
 }
 
-/*
-// NodePeers returns a Routes object representing the direct peers of target.
-func (a *Admin) NodePeers(IP string) (directPeers Routes, err error) {
-	if l := len(IP); l > 40 {
-		err = errors.New(IP + " is not a valid address")
-		return
-	} else if l < 40 {
-		IP = PadIPv6(IP)
+// Peers returns a Routes object representing routes directly connected to a given IP.
+func (rs Routes) Peers(ip string) (peerRoutes Routes) {
+	if len(ip) != 39 {
+		full := ip[:4]
+		for _, couplet := range strings.SplitN(ip[5:], ":", 7) {
+			if len(couplet) == 4 {
+				full = full + ":" + couplet
+			} else {
+				full = full + fmt.Sprintf(":%04s", couplet)
+			}
+		}
+		ip = full
 	}
 
-	var table Routes
-	table, err = a.NodeStore_dumpTable()
-	if err != nil {
-		return
-	}
+	pm := make(map[string]*Route)
 
-	m := make(map[string]*Route)
-
-	for _, nodeA := range table {
-		if nodeA.IP != IP {
+	for _, nodeA := range rs {
+		if nodeA.IP != ip {
 			continue
 		}
-		fmt.Println("found", nodeA.IP, "at", nodeA.Path, "in table")
 
-		for _, nodeB := range table {
-			if nodeB.IP == IP {
-				continue
-			}
-			fmt.Println("looking at", nodeB.IP, nodeB.Path)
+		for _, nodeB := range rs {
 			if isOneHop(nodeA.Path, nodeB.Path) || isOneHop(nodeB.Path, nodeA.Path) {
-				fmt.Println(nodeA.Path, "is next to", nodeB.Path)
-				if previous, ok := m[nodeB.IP]; !ok || previous.Path > nodeB.Path {
-					m[nodeB.IP] = nodeB
+				if prev, ok := pm[nodeB.IP]; !ok || nodeB.Path < prev.Path {
+					// route has not be stored or it is shorter than the previous
+					pm[nodeB.IP] = nodeB
 				}
 			}
 		}
 	}
-	directPeers = make(Routes, len(m))
+
+	peerRoutes = make(Routes, len(pm))
 	var i int
-	for _, r := range m {
-		directPeers[i] = r
+	for _, route := range pm {
+		peerRoutes[i] = route
 		i++
 	}
 	return
 }
-*/
