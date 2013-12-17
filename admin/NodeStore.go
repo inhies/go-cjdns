@@ -3,7 +3,7 @@ package admin
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
+	"net"
 	"sort"
 	"strconv"
 	"strings"
@@ -12,15 +12,15 @@ import (
 const magicalLinkConstant = 5366870 //Determined by cjd way back in the dark ages.
 
 type Route struct {
-	IP      string
+	IP      *net.IP
 	Link    Link
-	Path    Path
+	Path    *Path
 	Version int
 }
 
 type (
 	Link uint32
-	Path int64
+	Path uint64
 )
 
 func (l Link) String() string {
@@ -28,16 +28,31 @@ func (l Link) String() string {
 }
 
 func (p Path) String() string {
-	str := strconv.FormatInt(int64(p), 10)
-	str = strings.Repeat("0", 16-len(str)) + str
-	var out string
-	for i, s := range str {
-		if i > 0 && i%4 == 0 {
-			out += "."
-		}
-		out += string(s)
-	}
-	return out
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(p))
+	text := make([]byte, 19)
+	hex.Encode(text, b)
+	copy(text[15:19], text[12:16])
+	text[14] = '.'
+	copy(text[10:14], text[8:12])
+	text[9] = '.'
+	copy(text[5:9], text[4:8])
+	text[4] = '.'
+	return string(text)
+}
+
+func (p Path) MarshalText() (text []byte, err error) {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(p))
+	text = make([]byte, 19)
+	hex.Encode(text, b)
+	copy(text[15:19], text[12:16])
+	text[14] = '.'
+	copy(text[10:14], text[8:12])
+	text[9] = '.'
+	copy(text[5:9], text[4:8])
+	text[4] = '.'
+	return
 }
 
 func ParsePath(path string) Path {
@@ -51,7 +66,22 @@ func ParsePath(path string) Path {
 		return 0
 	}
 	return Path(binary.BigEndian.Uint64(bPath))
+}
 
+func (p *Path) UnmarshalText(text []byte) error {
+	copy(text[4:8], text[5:9])
+	copy(text[8:12], text[10:14])
+	copy(text[12:16], text[15:19])
+	text = text[:16]
+
+	b := make([]byte, 16)
+
+	_, err := hex.Decode(b, text)
+	if err != nil {
+		return err
+	}
+	*p = Path(binary.BigEndian.Uint64(b))
+	return nil
 }
 
 type Routes []*Route
@@ -82,7 +112,7 @@ func (r Routes) SortByPath() {
 
 type byPath struct{ Routes }
 
-func (s byPath) Less(i, j int) bool { return s.Routes[i].Path < s.Routes[j].Path }
+func (s byPath) Less(i, j int) bool { return *s.Routes[i].Path < *s.Routes[j].Path }
 
 // SortByQuality sorts Routes by link quality.
 func (r Routes) SortByQuality() {
@@ -116,7 +146,7 @@ func isBehind(destination, midPath Path) bool {
 
 // IsBehind returns true if packets destined for Route go through the specified node.
 func (r *Route) IsBehind(node *Route) bool {
-	return isBehind(r.Path, node.Path)
+	return isBehind(*r.Path, *node.Path)
 }
 
 // Return true if destination is 1 hop away from midPath
@@ -140,12 +170,9 @@ func isOneHop(destination, midPath Path) bool {
 }
 
 // Hops returns a Routes object representing a set of hops to a path
-func (rs Routes) Hops(path string) (hops Routes) {
-	h, _ := hex.DecodeString(strings.Replace(path, ".", "", -1))
-	p := binary.BigEndian.Uint64(h)
-	//rs.parsePaths()
+func (rs Routes) Hops(path Path) (hops Routes) {
 	for _, r := range rs {
-		if isBehind(Path(p), r.Path) {
+		if isBehind(path, *r.Path) {
 			hops = append(hops, r)
 		}
 	}
@@ -154,85 +181,60 @@ func (rs Routes) Hops(path string) (hops Routes) {
 
 // NodeStore_dumpTable will return cjdns's routing table.
 func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
-	more := true
-	var page int
-	var response map[string]interface{}
-	for more {
-		args := make(map[string]interface{})
-		args["page"] = page
+	var (
+		args = new(struct {
+			Page int `bencode:"page"`
+		})
+		req = &request{Q: "NodeStore_dumpTable", Args: args}
 
-		response, err = SendCmd(c, "NodeStore_dumpTable", args)
+		resp = new(struct {
+			More bool
+			// skip this for now just to get the function to work
+			RoutingTable Routes
+		})
+
+		pack *packet
+	)
+
+	resp.More = true
+	for resp.More {
+		resp.More = false
+		if pack, err = c.sendCmd(req); err == nil {
+			err = pack.Decode(resp)
+		}
 		if err != nil {
-			return
+			break
 		}
-		if e, ok := response["error"]; ok {
-			if e.(string) != "none" {
-				err = errors.New("NodeStore_dumpTable: " + e.(string))
-				return
-			}
-		}
-
-		rawTable := response["routingTable"].([]interface{})
-		for i := range rawTable {
-			r := rawTable[i].(map[string]interface{})
-			routingTable = append(routingTable, &Route{
-				IP:      r["ip"].(string),
-				Link:    Link(r["link"].(int64)),
-				Path:    ParsePath(r["path"].(string)),
-				Version: int(r["version"].(int64)),
-			})
-		}
-
-		if more = (response["more"] != nil); more {
-			page++
-		}
+		args.Page++
 	}
-	return
+
+	return resp.RoutingTable, err
 }
 
-/*
-// NodePeers returns a Routes object representing the direct peers of target.
-func (a *Admin) NodePeers(IP string) (directPeers Routes, err error) {
-	if l := len(IP); l > 40 {
-		err = errors.New(IP + " is not a valid address")
-		return
-	} else if l < 40 {
-		IP = PadIPv6(IP)
-	}
+// Peers returns a Routes object representing routes directly connected to a given IP.
+func (rs Routes) Peers(ip net.IP) (peerRoutes Routes) {
+	pm := make(map[string]*Route)
 
-	var table Routes
-	table, err = a.NodeStore_dumpTable()
-	if err != nil {
-		return
-	}
-
-	m := make(map[string]*Route)
-
-	for _, nodeA := range table {
-		if nodeA.IP != IP {
+	for _, nodeA := range rs {
+		if !nodeA.IP.Equal(ip) {
 			continue
 		}
-		fmt.Println("found", nodeA.IP, "at", nodeA.Path, "in table")
 
-		for _, nodeB := range table {
-			if nodeB.IP == IP {
-				continue
-			}
-			fmt.Println("looking at", nodeB.IP, nodeB.Path)
-			if isOneHop(nodeA.Path, nodeB.Path) || isOneHop(nodeB.Path, nodeA.Path) {
-				fmt.Println(nodeA.Path, "is next to", nodeB.Path)
-				if previous, ok := m[nodeB.IP]; !ok || previous.Path > nodeB.Path {
-					m[nodeB.IP] = nodeB
+		for _, nodeB := range rs {
+			if isOneHop(*nodeA.Path, *nodeB.Path) || isOneHop(*nodeB.Path, *nodeA.Path) {
+				if prev, ok := pm[nodeB.IP.String()]; !ok || *nodeB.Path < *prev.Path {
+					// route has not be stored or it is shorter than the previous
+					pm[nodeB.IP.String()] = nodeB
 				}
 			}
 		}
 	}
-	directPeers = make(Routes, len(m))
+
+	peerRoutes = make(Routes, len(pm))
 	var i int
-	for _, r := range m {
-		directPeers[i] = r
+	for _, route := range pm {
+		peerRoutes[i] = route
 		i++
 	}
 	return
 }
-*/
