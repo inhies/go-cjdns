@@ -69,8 +69,8 @@ func (k Public) String() string {
 }
 
 // Implements the encoding.TextMarshaler interface
-func (k Public) MarshalText() ([]byte, error) {
-	return []byte(makeString(k) + ".k"), nil
+func (k *Public) MarshalText() ([]byte, error) {
+	return []byte(makeString(*k) + ".k"), nil
 }
 
 // Implements the encoding.TextUnmarshaler interface
@@ -80,12 +80,12 @@ func (k *Public) UnmarshalText(text []byte) (err error) {
 }
 
 // Retusn the cjdns IPv6 address of the key.
-func (k *Public) IP() net.IP {
+func (k Public) IP() net.IP {
 	return k.makeIPv6()
 }
 
 // Returns a string containing the IPv6 address for the public key
-func (k *Public) makeIPv6() net.IP {
-	out := hashTwice(*k)
+func (k Public) makeIPv6() net.IP {
+	out := hashTwice(k)
 	return net.IP(out)
 }
