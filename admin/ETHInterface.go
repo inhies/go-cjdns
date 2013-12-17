@@ -1,5 +1,7 @@
 package admin
 
+import "github.com/inhies/go-cjdns/key"
+
 const (
 	BeaconDisable       = 0 //  No beacons are sent and incoming beacon messages are discarded.
 	BeaconAccept        = 1 //  No beacons are sent but if an incoming beacon is received, it is acted upon.
@@ -25,13 +27,13 @@ func (c *Conn) ETHInterface_new(device string) (iface int, err error) {
 
 // ETHInterface_beginConnection connects an ETHInterface to another computer which has an ETHInterface running.
 // Use iface 0 for the first interface.
-func (c *Conn) ETHInterface_beginConnection(iface int, mac, pass, pubkey string) error {
+func (c *Conn) ETHInterface_beginConnection(iface int, mac, pass string, pubKey key.Public) error {
 	args := &struct {
-		InterfaceNumber int    `bencode:"interfaceNumber"`
-		Password        string `bencode:"password"`
-		MacAddress      string `bencode:"MacAddress"`
-		PublicKey       string `bencode:"publicKey"`
-	}{iface, pass, mac, pubkey}
+		InterfaceNumber int        `bencode:"interfaceNumber"`
+		Password        string     `bencode:"password"`
+		MacAddress      string     `bencode:"MacAddress"`
+		PublicKey       key.Public `bencode:"publicKey"`
+	}{iface, pass, mac, pubKey}
 	_, err := c.sendCmd(&request{AQ: "ETHInterface_beginConnection", Args: args})
 	return err
 }

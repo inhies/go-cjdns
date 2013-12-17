@@ -2,13 +2,16 @@ package admin
 
 // Security_noFiles removes the ability to create new files from cjdns.
 // It is recommended to always set this.
-func (c *Conn) Security_noFiles() (response map[string]interface{}, err error) {
-	var pack *packet
-	pack, err = c.sendCmd(&request{AQ: "Security_noFiles"})
-	if err == nil {
-		err = pack.Decode(&response)
-	}
-	return
+func (c *Conn) Security_noFiles() error {
+	_, err := c.sendCmd(&request{AQ: "Security_noFiles"})
+	return err
 }
 
-//Security_setUser(user)
+func (c *Conn) Security_setUser(user string) error {
+	_, err := c.sendCmd(&request{
+		AQ: "Security_setUser",
+		Args: &struct {
+			User string `bencode:"user"`
+		}{user}})
+	return err
+}

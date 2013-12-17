@@ -1,13 +1,18 @@
 package admin
 
-/*
-import (
-	//"github.com/inhies/go-cjdns/key"
-	//"time"
-)
-*/
+import "github.com/inhies/go-cjdns/key"
 
-type PeerState int
+func (c *Conn) InterfaceController_disconnectPeer(pubKey key.Public) error {
+	_, err := c.sendCmd(&request{
+		AQ: "InterfaceController_disconnectPeer",
+		Args: &struct {
+			PubKey key.Public `bencode:"pubKey"`
+		}{pubKey}})
+	return err
+
+}
+
+//type PeerState int
 
 // Peer state values
 const (
@@ -43,19 +48,17 @@ func (s PeerState) Int() int {
 
 // Peer statistics
 type PeerStats struct {
-	PublicKey          string // Public key of peer
-	SwitchLabel        string // Internal switch label for reaching the peer
-	IsIncoming         bool   // Is the peer connected to us, or us to them
-	BytesOut           int    // Total number of bytes sent
-	BytesIn            int    // Total number of bytes received
-	State              string // Peer connection state
-	Last               int64  // Last time a packet was received from the peer
+	PublicKey          *key.Public // Public key of peer
+	SwitchLabel        *Path       // Internal switch label for reaching the peer
+	IsIncoming         bool        // Is the peer connected to us, or us to them
+	BytesOut           int         // Total number of bytes sent
+	BytesIn            int         // Total number of bytes received
+	State              string      // Peer connection state
+	Last               int64       // Last time a packet was received from the peer
 	ReceivedOutOfRange int
 	Duplicates         int
 	LostPackets        int
 }
-
-//PublicKey          *key.Public // Public key of peer
 
 // Returns stats on currently connected peers
 func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
@@ -91,5 +94,3 @@ func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
 	}
 	return resp.Peers, err
 }
-
-//InterfaceController_disconnectPeer(pubkey)

@@ -1,15 +1,32 @@
 package admin
 
-import "testing"
-
-/*
 import (
-	"fmt"
-	"reflect"
+	"bytes"
+	"testing"
 )
-*/
 
 var c *Conn
+
+func TestPathMarshalingUnmarshaling(t *testing.T) {
+	path := new(Path)
+	if err := path.UnmarshalText([]byte("0000.0114.a785.58e3")); err != nil {
+		t.Error("Failed to unmarshal Path,", err)
+		return
+	}
+	if *path == 0 {
+		t.Error("unmarshaled path was empty")
+		return
+	}
+
+	test, err := path.MarshalText()
+	if err != nil {
+		t.Error("Failed to marshal Path,", err)
+		return
+	}
+	if !bytes.Equal([]byte("0000.0114.a785.58e3"), test) {
+		t.Errorf("Path marshal and unmarshal mismatch, wanted \"0000.0114.a785.58e3\", got %q", test)
+	}
+}
 
 func TestConnect(t *testing.T) {
 	var err error
@@ -46,28 +63,6 @@ func TestAuth(t *testing.T) {
 	}
 }
 
-func TestAvailableFunctions(t *testing.T) {
-	_, err := c.Admin_availableFunctions()
-	if err != nil {
-		t.Error(err)
-	}
-	/*
-		fmt.Println(reflect.Value(testing))
-		for cmd, args := range funcs {
-			fmt.Printf("// %s(", cmd)
-			if len(args) > 0 {
-				for k, arg := range args {
-					fmt.Printf(" %s %s, ", k, arg.Type)
-					//if arg.Required {
-					//	fmt.Print("(required)")
-					//}
-				}
-			}
-			fmt.Println(")")
-		}
-	*/
-}
-
 func TestAdmin_asyncEnabled(t *testing.T) {
 	_, err := c.Admin_asyncEnabled()
 	if err != nil {
@@ -90,7 +85,7 @@ func TestInterfaceController_peerStats(t *testing.T) {
 }
 
 func TestSecurity_noFiles(t *testing.T) {
-	_, err := c.Security_noFiles()
+	err := c.Security_noFiles()
 	if err != nil {
 		t.Error("Security_noFiles failed,", err)
 	}

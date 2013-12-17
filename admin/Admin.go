@@ -22,8 +22,6 @@ func (a *Conn) Admin_availableFunctions() (functions map[string]map[string]Admin
 		pack *packet
 	)
 
-	functions = res.AvailableFunctions
-
 	res.More = true
 	for res.More {
 		res.More = false
@@ -35,7 +33,7 @@ func (a *Conn) Admin_availableFunctions() (functions map[string]map[string]Admin
 		}
 		args.Page++
 	}
-	return
+	return res.AvailableFunctions, err
 }
 
 // Checks with cjdns to see if asynchronous communication is allowed
