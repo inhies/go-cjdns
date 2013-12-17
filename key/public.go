@@ -8,7 +8,7 @@ import (
 type Public [32]byte
 
 // Takes the string representation of a public key and returns a new Public
-func DecodePublic(key string) (*Public, error) {
+func DecodePublic(key string) (Public, error) {
 	raw := []byte{}
 	out := [32]byte{}
 
@@ -42,7 +42,7 @@ func DecodePublic(key string) (*Public, error) {
 
 	// If there was padding, there will be bits left, but they should be zero
 	if wide != 0 {
-		return nil, ErrInvalidPubKey
+		return out, ErrInvalidPubKey
 	}
 
 	// Convert the slice to an array
@@ -51,32 +51,31 @@ func DecodePublic(key string) (*Public, error) {
 
 	// Check the key for validitiy
 	if !keyOut.Valid() {
-		return nil, ErrInvalidPubKey
+		return keyOut, ErrInvalidPubKey
 	}
-
-	return &keyOut, nil
+	return keyOut, nil
 }
 
 // Returns true if k is a valid public key.
-func (k *Public) Valid() bool {
+func (k Public) Valid() bool {
 	// It's a valid key if the IP address begins with FC
-	v := hashTwice(*k)
+	v := hashTwice(k)
 	return v[0] == 0xFC
 }
 
 // Returns the public key in base32 format ending with .k
-func (k *Public) String() string {
-	return makeString(*k) + ".k"
+func (k Public) String() string {
+	return makeString(k) + ".k"
 }
 
 // Implements the encoding.TextMarshaler interface
-func (k *Public) MarshalText() ([]byte, error) {
-	return []byte(makeString(*k) + ".k"), nil
+func (k Public) MarshalText() ([]byte, error) {
+	return []byte(makeString(k) + ".k"), nil
 }
 
 // Implements the encoding.TextUnmarshaler interface
 func (k *Public) UnmarshalText(text []byte) (err error) {
-	k, err = DecodePublic(string(text))
+	*k, err = DecodePublic(string(text))
 	return
 }
 
