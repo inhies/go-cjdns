@@ -2,6 +2,7 @@ package admin
 
 import (
 	"bytes"
+	"math"
 	"testing"
 )
 
@@ -70,10 +71,48 @@ func TestAdmin_asyncEnabled(t *testing.T) {
 	}
 }
 
+var table Routes
+
 func TestNodeStore_dumpTable(t *testing.T) {
-	_, err := c.NodeStore_dumpTable()
+	var err error
+	table, err = c.NodeStore_dumpTable()
 	if err != nil {
 		t.Error("NodeStore_dumpTable failed,", err)
+	}
+}
+
+func TestLog2x64Algos(t *testing.T) {
+	for _, r := range table {
+		path := *r.Path
+		testA := Path(math.Log2(float64(path)))
+		var testB Path
+		for path > 1 {
+			path >>= 1
+			testB++
+		}
+		if testA != testB {
+			t.Error("not equal,", testA, testB)
+		}
+	}
+}
+
+func BenchmarkLog2x64Float(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r := table[i%len(table)]
+		_ = Path(math.Log2(float64(*r.Path)))
+	}
+
+}
+
+func BenchmarkLog2x64Shift(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r := table[i%len(table)]
+		in := *r.Path
+		var out Path
+		for in > 1 {
+			in >>= 1
+			out++
+		}
 	}
 }
 

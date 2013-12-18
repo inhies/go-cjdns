@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"math"
 	"net"
 	"sort"
 	"strconv"
@@ -136,7 +135,15 @@ type byQuality struct{ Routes }
 func (s byQuality) Less(i, j int) bool { return s.Routes[i].Link > s.Routes[j].Link }
 
 // Log base 2 of a Path
-func log2x64(p Path) Path { return Path(math.Log2(float64(p))) }
+func log2x64(p Path) (out Path) {
+	// return Path(math.Log2(float64(p)))
+	// Second method is faster
+	for p > 1 {
+		p >>= 1
+		out++
+	}
+	return
+}
 
 // IsBehind returns true if midpath is routed through p.
 func (p Path) IsBehind(midPath Path) bool {
