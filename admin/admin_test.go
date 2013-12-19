@@ -43,6 +43,14 @@ func TestPing(t *testing.T) {
 	}
 }
 
+func BenchmarkPing(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		if err := c.Ping(); err != nil {
+			b.Error("Failed to ping,", err)
+		}
+	}
+}
+
 func TestMemory(t *testing.T) {
 	_, err := c.Memory()
 	if err != nil {
