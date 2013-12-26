@@ -125,9 +125,17 @@ func BenchmarkLog2x64Shift(b *testing.B) {
 }
 
 func TestInterfaceController_peerStats(t *testing.T) {
-	_, err := c.InterfaceController_peerStats()
+	peerStats, err := c.InterfaceController_peerStats()
 	if err != nil {
 		t.Error("InterfaceController_peerStats failed,", err)
+	}
+	for _, p := range peerStats {
+		if !p.PublicKey.Valid() {
+			t.Error("Bad public key in peerStats,", p.PublicKey)
+		}
+		if p.SwitchLabel == nil || *p.SwitchLabel == 0 {
+			t.Error("Bad SwitchLabel in peerStats,", p.SwitchLabel)
+		}
 	}
 }
 
@@ -144,6 +152,10 @@ func TestAuthorizedPasswords(t *testing.T) {
 
 	if err := c.AuthorizedPasswords_add(user, pass, 0); err != nil {
 		t.Error("failed to add password to cjdns,", err)
+		return
+	}
+	if err := c.AuthorizedPasswords_add(user, pass, 0); err != nil && !IsPasswordAlreadyAdded(err) {
+		t.Error("failed to add password to cjdns again,", err)
 		return
 	}
 

@@ -6,34 +6,35 @@ type AdminFunc struct {
 }
 
 // GetFunctions returns all available functions that cjdns supports
-func (a *Conn) Admin_availableFunctions() (functions map[string]map[string]AdminFunc, err error) {
+func (a *Conn) Admin_availableFunctions() (funcs map[string]map[string]AdminFunc, err error) {
 	var (
 		args = new(struct {
 			Page int `bencode:"page"`
 		})
-
 		req = &request{Q: "Admin_availableFunctions", Args: args}
 
-		res = new(struct {
+		resp = &struct {
 			AvailableFunctions map[string]map[string]AdminFunc
 			More               bool
-		})
+		}{funcs, true}
 
 		pack *packet
 	)
 
-	res.More = true
-	for res.More {
-		res.More = false
+	for resp.More {
+		resp.More = false
 		if pack, err = a.sendCmd(req); err == nil {
-			err = pack.Decode(res)
+			err = pack.Decode(resp)
 		}
 		if err != nil {
 			break
 		}
+		if len(resp.AvailableFunctions) == 0 {
+			panic("empty response")
+		}
 		args.Page++
 	}
-	return res.AvailableFunctions, err
+	return resp.AvailableFunctions, err
 }
 
 // Checks with cjdns to see if asynchronous communication is allowed

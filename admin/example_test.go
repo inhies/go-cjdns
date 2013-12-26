@@ -5,13 +5,15 @@ import (
 	"sort"
 )
 
-func ExampleAvailableFunctions() {
+func ExampleConn_Admin_availableFunctions() {
 	funcs, err := c.Admin_availableFunctions()
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	if len(funcs) == 0 {
 		fmt.Println("funcs was zero-length")
+		return
 	}
 
 	cmdList := make([]string, len(funcs))

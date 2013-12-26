@@ -51,8 +51,6 @@ func (a *Conn) readFromConn() {
 			}
 		}
 
-		//fmt.Printf("<- %q\n", b[:n])
-
 		// copy to new buffer
 		newB := make([]byte, n)
 		copy(newB, b[:n])
@@ -65,6 +63,7 @@ func (a *Conn) readFromConn() {
 		} else {
 			if r.Error != "none" && r.Error != "" {
 				pack.err = errors.New(r.Error)
+				r.Error = ""
 			}
 		}
 		if c, ok := a.responses[r.Txid]; ok {
