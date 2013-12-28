@@ -12,13 +12,15 @@ type (
 )
 
 // DeocodePrivate returns a private key from a hex encoded string.
-func DecodePrivate(s string) (key Private, err error) {
+func DecodePrivate(s string) (key *Private, err error) {
+	key = new(Private)
 	_, err = hex.Decode(key[:], []byte(s))
 	return
 }
 
 // Generate creates a new random private key.
-func Generate() (key Private) {
+func Generate() (key *Private) {
+	key = new(Private)
 	for {
 		rand.Read(key[:])
 
@@ -33,10 +35,10 @@ func Generate() (key Private) {
 }
 
 // Returns true if the private key is valid.
-func (k Private) Valid() bool { return k.Pubkey().Valid() }
+func (k *Private) Valid() bool { return k.Pubkey().Valid() }
 
 // Returns the public key in base32 format.
-func (k Private) String() string {
+func (k *Private) String() string {
 	return hex.EncodeToString(k[:])
 }
 
@@ -61,12 +63,12 @@ func (k *Private) UnmarshalText(text []byte) (err error) {
 }
 
 // Pubkey returns the associated public key for the supplied private key.
-func (k Private) Pubkey() Public {
-	var public [32]byte
-	private := [32]byte(k)
+func (k *Private) Pubkey() *Public {
+	var pub [32]byte
+	priv := [32]byte(*k)
 
 	// Performs ScalarBaseMult on the supplied private key, returning the public key
-	curve25519.ScalarBaseMult(&public, &private)
-
-	return public
+	curve25519.ScalarBaseMult(&pub, &priv)
+	public := Public(pub)
+	return &public
 }
