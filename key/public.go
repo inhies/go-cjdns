@@ -29,8 +29,8 @@ var (
 	suffix = []byte{'.', 'k'}
 )
 
-// Hashes the supplied array twice and return the resulting byte slice.
-func hashTwice(b [32]byte) []byte {
+// Hashes the supplied slice twice and return the resulting byte slice.
+func hashTwice(b []byte) []byte {
 	var ip []byte
 	h := sha512.New()
 	h.Write(b[:])
@@ -46,7 +46,7 @@ type Public [32]byte
 
 // encodePublic encodes a key array to a byte slice using the cjdns key alphabet.
 // dst should have a length of 52 or more.
-func encodePublic(dst []byte, k [32]byte) {
+func encodePublic(dst []byte, k *Public) {
 	var wide, bits uint
 	in := k[:]
 	var i int
@@ -67,7 +67,8 @@ func encodePublic(dst []byte, k [32]byte) {
 }
 
 // decodePublic decodes a byte slice to a Public.
-func decodePublic(p []byte) (key Public, err error) {
+func decodePublic(p []byte) (key *Public, err error) {
+	key = new(Public)
 	var wide, bits uint
 
 	var i int
@@ -97,9 +98,9 @@ func decodePublic(p []byte) (key Public, err error) {
 }
 
 // Takes the string representation of a public key and returns a new Public
-func DecodePublic(key string) (Public, error) {
+func DecodePublic(key string) (*Public, error) {
 	if len(key) < 52 {
-		return Public{}, ErrInvalidPubKey
+		return nil, ErrInvalidPubKey
 	}
 	if len(key) > 52 {
 		key = key[:52]
@@ -108,14 +109,14 @@ func DecodePublic(key string) (Public, error) {
 }
 
 // Returns true if k is a valid public key.
-func (k Public) Valid() bool {
+func (k *Public) Valid() bool {
 	// It's a valid key if the IP address begins with FC
-	v := hashTwice(k)
+	v := hashTwice(k[:])
 	return v[0] == 0xFC
 }
 
 // Returns the public key in base32 format ending with .k
-func (k Public) String() string {
+func (k *Public) String() string {
 	if k.isZero() {
 		return ""
 	}
@@ -125,7 +126,7 @@ func (k Public) String() string {
 	return string(b)
 }
 
-func (k Public) isZero() bool {
+func (k *Public) isZero() bool {
 	for _, c := range k {
 		if c != 0 {
 			return false
@@ -140,7 +141,7 @@ func (k *Public) MarshalText() ([]byte, error) {
 		return nil, errors.New("MarshalText called on zero key")
 	}
 	text := make([]byte, 54)
-	encodePublic(text, *k)
+	encodePublic(text, k)
 	copy(text[52:], suffix)
 	return text, nil
 }
@@ -161,17 +162,17 @@ func (k *Public) UnmarshalText(text []byte) error {
 	}
 
 	key, err := decodePublic(text)
-	*k = key
+	*k = *key
 	return err
 }
 
-// Retusn the cjdns IPv6 address of the key.
-func (k Public) IP() net.IP {
+// Returns the cjdns IPv6 address of the key.
+func (k *Public) IP() net.IP {
 	return k.makeIPv6()
 }
 
 // Returns a string containing the IPv6 address for the public key
-func (k Public) makeIPv6() net.IP {
-	out := hashTwice(k)
+func (k *Public) makeIPv6() net.IP {
+	out := hashTwice(k[:])
 	return net.IP(out)
 }
