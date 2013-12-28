@@ -2,6 +2,8 @@ package admin
 
 import "fmt"
 
+func IsPasswordAlreadyAdded(err error) bool { return err.Error() == "Password already added." }
+
 // AuthorizedPasswords_add adds a password with will allow neighbors to make
 // direct connections.
 // Set authType to zero to invoke default.

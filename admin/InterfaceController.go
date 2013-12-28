@@ -89,8 +89,5 @@ func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
 		}
 		args.Page++
 	}
-	if len(resp.Peers) == 0 {
-		println("peers empty")
-	}
 	return resp.Peers, err
 }

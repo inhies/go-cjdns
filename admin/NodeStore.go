@@ -97,24 +97,11 @@ type Routes []*Route
 func (rs Routes) Len() int      { return len(rs) }
 func (rs Routes) Swap(i, j int) { rs[i], rs[j] = rs[j], rs[i] }
 
-/*
-func (rs Routes) parsePaths() {
-	if rs[0].Path != 0 {
-		return
-	}
-	for _, r := range rs {
-		h, _ := hex.DecodeString(strings.Replace(r.Path, ".", "", -1))
-		r.Path = binary.BigEndian.Uint64(h)
-	}
-}
-*/
-
 // SortByPath sorts Routes by link quality.
 func (r Routes) SortByPath() {
 	if len(r) < 2 {
 		return
 	}
-	//r.parsePaths()
 	sort.Sort(byPath{r})
 }
 
