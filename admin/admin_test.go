@@ -147,7 +147,7 @@ func TestSecurity_noFiles(t *testing.T) {
 }
 
 func TestAuthorizedPasswords(t *testing.T) {
-	user := "dickweed"
+	user := "someguy"
 	pass := "hackme"
 
 	if err := c.AuthorizedPasswords_add(user, pass, 0); err != nil {
