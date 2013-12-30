@@ -26,6 +26,8 @@ var (
 		0x58, 0x7b, 0x29, 0x05, 0x7d, 0x74, 0xcd, 0xd4,
 		0xdc, 0x0b, 0xd1, 0x8b, 0x71, 0x57, 0x28, 0x8e,
 	}
+
+	randK = Generate()
 )
 
 func Test_Generate(t *testing.T) {
@@ -98,3 +100,109 @@ func Test_DecodePublic(t *testing.T) {
 		})
 	})
 }
+
+func TestMarshalUnmarshal(t *testing.T) {
+	// Private
+	privateA := Generate()
+	b, err := privateA.MarshalText()
+	if err != nil {
+		t.Error("failed to MarshalText on", privateA, err)
+	}
+	sA, sB := privateA.String(), string(b)
+	if sA != sB {
+		t.Error("failed to MarshalText on", sA, "got", sB)
+	}
+
+	privateB := new(Private)
+	err = privateB.UnmarshalText(b)
+	if err != nil {
+		t.Error("failed to UnMarshalText of", privateA, err)
+	}
+	sB = privateB.String()
+	if sA != sB {
+		t.Error("private key unmarshaling failed,", privateA, "and", privateB, "do not match")
+	}
+
+	// Public
+	publicA := privateA.Pubkey()
+	b, err = publicA.MarshalText()
+	if err != nil {
+		t.Error("failed to MarshalText on", publicA, err)
+	}
+
+	sA, sB = publicA.String(), string(b)
+	if sA != sB {
+		t.Error("failed to MarshalText on", sA, "got", sB)
+	}
+
+	publicB := new(Public)
+	err = publicB.UnmarshalText(b)
+	if err != nil {
+		t.Error("failed to UnMarshalText of", publicA, err)
+	}
+	sB = publicB.String()
+	if sA != sB {
+		t.Error("public key unmarshaling failed,", sA, "and", sB, "do not match")
+	}
+}
+
+func TestDecodePublic(t *testing.T) {
+	keyPublic, err := DecodePublic(pubkeyString)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if !keyPublic.Valid() {
+		t.Error("decoded public key", keyPublic, "not valid")
+	}
+	ip := keyPublic.IP()
+	if ip[0] != 0xFC {
+		t.Error("decoded public key", keyPublic, "has invalid IP address", keyPublic.IP())
+	}
+	if !ip.Equal(net.ParseIP(pubkeyIPv6)) {
+		t.Error("IP address should be", pubkeyIPv6, "got", ip)
+	}
+}
+
+func BenchmarkPrivateMarshalText(b *testing.B) {
+	k := Generate()
+	for i := 0; i < b.N; i++ {
+		k.MarshalText()
+	}
+}
+
+func BenchmarkPrivateUnmarshalText(b *testing.B) {
+	buf := []byte("751d3db85b848deaf221e0ed2b6cc17f587b29057d74cdd4dc0bd18b7157288e")
+	k := new(Private)
+	for i := 0; i < b.N; i++ {
+		k.UnmarshalText(buf)
+	}
+}
+
+func BenchmarkGenerate(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Generate()
+	}
+}
+
+func BenchmarkPubkey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		randK.Pubkey()
+	}
+}
+
+func BenchmarkPublicMarshalText(b *testing.B) {
+	pk := randK.Pubkey()
+	for i := 0; i < b.N; i++ {
+		pk.MarshalText()
+	}
+}
+
+func BenchmarkPublicUnmarshalText(b *testing.B) {
+	buf := []byte("r6jzx210usqbgnm3pdtm1z6btd14pvdtkn5j8qnpgqzknpggkuw0.k")
+	pk := new(Public)
+	for i := 0; i < b.N; i++ {
+		pk.UnmarshalText(buf)
+	}
+}
+
