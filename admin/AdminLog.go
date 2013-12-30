@@ -64,12 +64,9 @@ func (a *Conn) AdminLog_subscribe(level, file string, line int, c chan<- *LogMes
 	if err = pack.Decode(res); err != nil {
 		return
 	}
-	if res.Error != "none" {
-		err = errors.New(res.Error)
-		return
-	}
+
 	a.registerLogChan(res.StreamId, c)
-	return
+	return res.StreamId, nil
 }
 
 // Removes the logging subscription so that you no longer recieve log info.
