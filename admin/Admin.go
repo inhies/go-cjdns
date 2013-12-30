@@ -1,38 +1,49 @@
 package admin
 
+type AdminFunc struct {
+	Type     string
+	Required bool
+}
+
 // GetFunctions returns all available functions that cjdns supports
-func (c *Conn) Admin_availableFunctions() (functions map[string]string, err error) {
-	var page int
-	more := true
-	args := make(map[string]interface{})
-	var response map[string]interface{}
+func (a *Conn) Admin_availableFunctions() (funcs map[string]map[string]AdminFunc, err error) {
+	var (
+		args = new(struct {
+			Page int `bencode:"page"`
+		})
+		req = &request{Q: "Admin_availableFunctions", Args: args}
 
-	for more {
-		args["page"] = page
-		response, err = SendCmd(c, "Admin_availableFunctions", args)
-		if err != nil {
-			return
+		resp = &struct {
+			AvailableFunctions map[string]map[string]AdminFunc
+			More               bool
+		}{funcs, true}
+
+		pack *packet
+	)
+
+	for resp.More {
+		resp.More = false
+		if pack, err = a.sendCmd(req); err == nil {
+			err = pack.Decode(resp)
 		}
-		more = (response["more"].(int64) == 1)
-		page++
+		if err != nil {
+			break
+		}
+		if len(resp.AvailableFunctions) == 0 {
+			panic("empty response")
+		}
+		args.Page++
 	}
-
-	functions = make(map[string]string)
-	for k, v := range response["availableFunctions"].(map[string]string) {
-		functions[k] = v
-	}
-	return
+	return resp.AvailableFunctions, err
 }
 
 // Checks with cjdns to see if asynchronous communication is allowed
-func (c *Conn) Admin_asyncEnabled() (enabled bool, err error) {
-	response, err := SendCmd(c, "Admin_asyncEnabled", nil)
-	if err != nil {
-		return
-	}
+func (c *Conn) Admin_asyncEnabled() (bool, error) {
+	res := new(struct{ AsyncEnabled bool })
 
-	if response["asyncEnabled"].(int64) == 1 {
-		enabled = true
+	pack, err := c.sendCmd(&request{Q: "Admin_asyncEnabled"})
+	if err == nil {
+		err = pack.Decode(res)
 	}
-	return
+	return res.AsyncEnabled, err
 }

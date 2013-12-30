@@ -1,63 +1,48 @@
 package admin
 
-import (
-	"fmt"
-	"time"
-)
+import "errors"
 
-// Memory is supposed to return information on cjdns's memory use but it currently
-// just crashes it.
-func (c *Conn) Memory() (memory int64, err error) {
-	response, err := SendCmd(c, "memory", nil)
-	if err != nil {
-		return
+// Memory returns the number of bytes allocated by all memory allocators
+// in the router.
+func (a *Conn) Memory() (int, error) {
+	r := new(struct{ Bytes int })
+	pack, err := a.sendCmd(&request{Q: "memory"})
+	if err == nil {
+		err = pack.Decode(r)
 	}
-	memory = response["bytes"].(int64)
-	return
+
+	return r.Bytes, err
 }
 
-// Requests a cookie from cjdns and returns it.
-func (c *Conn) ReqCookie() (cookie string, err error) {
-	response, err := SendCmd(c, "cookie", nil)
-	if err != nil {
-		return
+// Ping sends a ping to cjdns and returns true if a pong was received.
+func (a *Conn) Ping() error {
+	pack, err := a.sendCmd(&request{Q: "ping"})
+	if err == nil {
+		r := new(struct {
+			Q     string
+			Error string
+		})
+		err = pack.Decode(r)
+		if r.Q != "pong" {
+			err = errors.New("did not receive pong.")
+		}
 	}
-	cookie = response["cookie"].(string)
-	return
+	return nil
 }
 
-// Sends a ping to cjdns and returns true if a pong was received
-// before the specified timeout.
-func (c *Conn) SendPing(timeout time.Duration) (bool, error) {
-	rChan := make(chan map[string]interface{}, 1)
-	go func() {
-		response, err := SendCmd(c, "ping", nil)
-		if err != nil {
-			return
+// authedPing sends an "authorized" ping to cjdns and returns an error if a
+// pong is not recieved
+func (a *Conn) authedPing() error {
+	pack, err := a.sendCmd(&request{AQ: "ping"})
+	if err == nil {
+		r := new(struct {
+			Q     string
+			Error string
+		})
+		err = pack.Decode(r)
+		if r.Q != "pong" {
+			err = errors.New("did not receive pong.")
 		}
-		rChan <- response
-	}()
-
-	timeout *= 1000 * 1000
-
-	reply := make(map[string]interface{})
-	var err error
-	var ok bool
-	select {
-	case reply, ok = <-rChan:
-		if !ok {
-			fmt.Errorf("error reading ping response from cjdns.")
-		}
-	case <-time.After(timeout):
-		err = fmt.Errorf("cjdns is not responding, you may need to restart it.")
 	}
-
-	if err != nil {
-		return false, err
-	}
-	if reply["q"] != "pong" {
-		err := fmt.Errorf("Did not recieve pong from cjdns.")
-		return false, err
-	}
-	return true, nil
+	return nil
 }

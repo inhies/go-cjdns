@@ -11,59 +11,31 @@ type (
 	Private [32]byte
 )
 
-// Deocdes the hex representation of a private key.
-func DecodePrivate(key string) (*Private, error) {
-	keyBytes, err := hex.DecodeString(key)
-	if err != nil {
-		return nil, err
-	}
-
-	var keyOut Private
-	copy(keyOut[:], keyBytes[:32])
-	return &keyOut, nil
+// DeocodePrivate returns a private key from a hex encoded string.
+func DecodePrivate(s string) (key *Private, err error) {
+	key = new(Private)
+	_, err = hex.Decode(key[:], []byte(s))
+	return
 }
 
-// Returns a new randomly generated private key.
-func Generate() *Private {
-	var priv Private
-	privkey := Private(priv)
+// Generate creates a new random private key.
+func Generate() (key *Private) {
+	key = new(Private)
+	for {
+		rand.Read(key[:])
 
-Start:
-	rand.Read(privkey[:])
+		key[0] &= 248
+		key[31] &= 127
+		key[31] |= 64
 
-	privkey[0] &= 248
-	privkey[31] &= 127
-	privkey[31] |= 64
-
-	pubkey := privkey.makePub()
-
-	// Loop until we get a private key that will create a valid IPv6 address.
-	if !pubkey.Valid() {
-		goto Start
+		if key.Valid() {
+			return
+		}
 	}
-
-	return &privkey
-}
-
-// Performs ScalarBaseMult on the supplied private key, returning the public key
-func (privkey *Private) makePub() *Public {
-	var pub [32]byte
-	priv := [32]byte(*privkey)
-
-	curve25519.ScalarBaseMult(&pub, &priv)
-
-	pubkey := Public(pub)
-	return &pubkey
 }
 
 // Returns true if the private key is valid.
-func (k *Private) Valid() bool {
-	pubkey := k.makePub()
-	if !pubkey.Valid() {
-		return false
-	}
-	return true
-}
+func (k *Private) Valid() bool { return k.Pubkey().Valid() }
 
 // Returns the public key in base32 format.
 func (k *Private) String() string {
@@ -79,11 +51,24 @@ func (k *Private) MarshalText() ([]byte, error) {
 
 // Implements the encoding.TextUnmarshaler interface
 func (k *Private) UnmarshalText(text []byte) (err error) {
-	k, err = DecodePrivate(string(text))
+	if len(text) == 0 {
+		k = nil
+		return
+	}
+
+	key := Private{}
+	_, err = hex.Decode(key[:], text)
+	*k = key
 	return
 }
 
-// Returns the associated public key for the supplied private key.
+// Pubkey returns the associated public key for the supplied private key.
 func (k *Private) Pubkey() *Public {
-	return k.makePub()
+	var pub [32]byte
+	priv := [32]byte(*k)
+
+	// Performs ScalarBaseMult on the supplied private key, returning the public key
+	curve25519.ScalarBaseMult(&pub, &priv)
+	public := Public(pub)
+	return &public
 }
