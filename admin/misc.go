@@ -32,7 +32,7 @@ func (a *Conn) Ping() error {
 
 // authedPing sends an "authorized" ping to cjdns and returns an error if a
 // pong is not recieved
-func (a *Conn) AuthedPing() error {
+func (a *Conn) authedPing() error {
 	pack, err := a.sendCmd(&request{AQ: "ping"})
 	if err == nil {
 		r := new(struct {

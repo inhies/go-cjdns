@@ -66,7 +66,7 @@ func TestCookie(t *testing.T) {
 }
 
 func TestAuth(t *testing.T) {
-	err := c.AuthedPing()
+	err := c.authedPing()
 	if err != nil {
 		t.Error(err)
 	}
