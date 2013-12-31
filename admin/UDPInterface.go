@@ -7,13 +7,13 @@ import "github.com/inhies/go-cjdns/key"
 // and will not convey the state of the connection itself.
 //
 // address has the form host:port.
-func (a *Conn) UDPInterface_beginConnection(pubkey key.Public, address string, interfaceNumber int, password string) error {
+func (a *Conn) UDPInterface_beginConnection(pubkey *key.Public, address string, interfaceNumber int, password string) error {
 	var (
 		args = &struct {
-			Address        string     `bencode:"address"`
-			IntefaceNumber int        `bencode:"interfaceNumber,omitempty"`
-			Password       string     `bencode:"password"`
-			PublicKey      key.Public `bencode:"address"`
+			Address        string      `bencode:"address"`
+			IntefaceNumber int         `bencode:"interfaceNumber,omitempty"`
+			Password       string      `bencode:"password"`
+			PublicKey      *key.Public `bencode:"address"`
 		}{address, interfaceNumber, password, pubkey}
 		req  = &request{AQ: "UDPInterface_beginConnection", Args: args}
 		resp = new(struct{ InterfaceNumber int })
