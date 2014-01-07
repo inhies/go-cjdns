@@ -68,6 +68,7 @@ func (a *Conn) readFromConn() {
 		}
 		if c, ok := a.responses[r.Txid]; ok {
 			c <- pack
+			continue
 		}
 
 		if c, ok := a.logStreams[r.StreamId]; ok {
