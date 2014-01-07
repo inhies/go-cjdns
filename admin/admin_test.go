@@ -139,13 +139,6 @@ func TestInterfaceController_peerStats(t *testing.T) {
 	}
 }
 
-func TestSecurity_noFiles(t *testing.T) {
-	err := c.Security_noFiles()
-	if err != nil {
-		t.Error("Security_noFiles failed,", err)
-	}
-}
-
 func TestAuthorizedPasswords(t *testing.T) {
 	user := "someguy"
 	pass := "hackme"
