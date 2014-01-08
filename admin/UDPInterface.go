@@ -7,7 +7,7 @@ import "github.com/inhies/go-cjdns/key"
 // and will not convey the state of the connection itself.
 //
 // address has the form host:port.
-func (a *Conn) UDPInterface_beginConnection(pubkey *key.Public, address string, interfaceNumber int, password string) error {
+func (a *Client) UDPInterface_beginConnection(pubkey *key.Public, address string, interfaceNumber int, password string) error {
 	var (
 		args = &struct {
 			Address        string      `bencode:"address"`
@@ -31,7 +31,7 @@ func (a *Conn) UDPInterface_beginConnection(pubkey *key.Public, address string, 
 // UDPInterface_new creates a new UDPInterface which is either bound to an address/port or not and returns an index number for the interface.
 //
 // laddr has the form host:port, if host is unspecified, it is assumed to be `0.0.0.0`.
-func (a *Conn) UDPInterface_new(laddr string) (interfaceNumber int, err error) {
+func (a *Client) UDPInterface_new(laddr string) (interfaceNumber int, err error) {
 	var (
 		args = new(struct {
 			Addr string `bencode:"bindAddress"`

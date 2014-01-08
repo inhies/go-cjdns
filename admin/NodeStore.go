@@ -182,7 +182,7 @@ func (rs Routes) Hops(destination Path) (hops Routes) {
 }
 
 // NodeStore_dumpTable will return cjdns's routing table.
-func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
+func (c *Client) NodeStore_dumpTable() (routingTable Routes, err error) {
 	var (
 		args = new(struct {
 			Page int `bencode:"page"`

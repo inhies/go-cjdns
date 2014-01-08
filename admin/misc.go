@@ -4,7 +4,7 @@ import "errors"
 
 // Memory returns the number of bytes allocated by all memory allocators
 // in the router.
-func (a *Conn) Memory() (int, error) {
+func (a *Client) Memory() (int, error) {
 	r := new(struct{ Bytes int })
 	pack, err := a.sendCmd(&request{Q: "memory"})
 	if err == nil {
@@ -15,7 +15,7 @@ func (a *Conn) Memory() (int, error) {
 }
 
 // Ping sends a ping to cjdns and returns true if a pong was received.
-func (a *Conn) Ping() error {
+func (a *Client) Ping() error {
 	pack, err := a.sendCmd(&request{Q: "ping"})
 	if err == nil {
 		r := new(struct {
@@ -32,7 +32,7 @@ func (a *Conn) Ping() error {
 
 // authedPing sends an "authorized" ping to cjdns and returns an error if a
 // pong is not recieved
-func (a *Conn) authedPing() error {
+func (a *Client) authedPing() error {
 	pack, err := a.sendCmd(&request{AQ: "ping"})
 	if err == nil {
 		r := new(struct {

@@ -6,7 +6,7 @@ import "errors"
 // Pinging IP addresses this way is not possible.
 //
 // data is an optional string that the destination switch will echo back.
-func (c *Conn) SwitchPinger_ping(path, dataIn string, timeout int) (dataOut string, ms int, err error) {
+func (c *Client) SwitchPinger_ping(path, dataIn string, timeout int) (dataOut string, ms int, err error) {
 	var (
 		args = &struct {
 			Data    string `bencode:"data,omitempty"`

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var c *Conn
+var c *Client
 
 func TestPathMarshalingUnmarshaling(t *testing.T) {
 	path := new(Path)

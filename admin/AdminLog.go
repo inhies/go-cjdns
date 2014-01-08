@@ -25,7 +25,7 @@ func (m *LogMessage) String() string { return m.Message }
 
 // Subscribes you to receive logging updates based on the parameters that are set.
 // Set file to "" to log from all files, set line to -1 lo log from any line.
-func (a *Conn) AdminLog_subscribe(level, file string, line int, c chan<- *LogMessage) (streamId string, err error) {
+func (a *Client) AdminLog_subscribe(level, file string, line int, c chan<- *LogMessage) (streamId string, err error) {
 	var pack *packet
 	req := &request{AQ: "AdminLog_subscribe"}
 	if file != "" {
@@ -70,7 +70,7 @@ func (a *Conn) AdminLog_subscribe(level, file string, line int, c chan<- *LogMes
 }
 
 // Removes the logging subscription so that you no longer recieve log info.
-func (a *Conn) AdminLog_unsubscribe(streamId string) error {
+func (a *Client) AdminLog_unsubscribe(streamId string) error {
 	args := new(struct {
 		StreamId string `bencode:"streamId"`
 	})

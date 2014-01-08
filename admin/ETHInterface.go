@@ -11,7 +11,7 @@ const (
 // ETHInterface_new creates a new ETHInterface and bind it to a device.
 // Use the returned iface number with ETHInterface_beginConnection and
 // ETHInterface_beacon.
-func (c *Conn) ETHInterface_new(device string) (iface int, err error) {
+func (c *Client) ETHInterface_new(device string) (iface int, err error) {
 	args := &struct {
 		BindDevice string `bencode:"bindDevice"`
 	}{device}
@@ -27,7 +27,7 @@ func (c *Conn) ETHInterface_new(device string) (iface int, err error) {
 
 // ETHInterface_beginConnection connects an ETHInterface to another computer which has an ETHInterface running.
 // Use iface 0 for the first interface.
-func (c *Conn) ETHInterface_beginConnection(iface int, mac, pass string, pubKey key.Public) error {
+func (c *Client) ETHInterface_beginConnection(iface int, mac, pass string, pubKey key.Public) error {
 	args := &struct {
 		InterfaceNumber int        `bencode:"interfaceNumber"`
 		Password        string     `bencode:"password"`
@@ -46,7 +46,7 @@ func (c *Conn) ETHInterface_beginConnection(iface int, mac, pass string, pubKey 
 //
 // state is the state to switch to, if -1 the current state will be queried only.
 // See BeaconDisable, BeaconAccept, and BeaconAcceptAndSend.
-func (c *Conn) ETHInterface_beacon(iface int, state int) (currentState int, stateDescription string, err error) {
+func (c *Client) ETHInterface_beacon(iface int, state int) (currentState int, stateDescription string, err error) {
 	args := &struct {
 		InterfaceNumber int `bencode:"interfaceNumber"`
 		State           int `bencode:"state"`

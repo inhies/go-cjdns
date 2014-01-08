@@ -7,7 +7,7 @@ func IsPasswordAlreadyAdded(err error) bool { return err.Error() == "Password al
 // AuthorizedPasswords_add adds a password with will allow neighbors to make
 // direct connections.
 // Set authType to zero to invoke default.
-func (c *Conn) AuthorizedPasswords_add(user, password string, authType int) error {
+func (c *Client) AuthorizedPasswords_add(user, password string, authType int) error {
 	var args = &struct {
 		AuthType int    `bencode:"authType,omitempty"`
 		Password string `bencode:"password"`
@@ -19,7 +19,7 @@ func (c *Conn) AuthorizedPasswords_add(user, password string, authType int) erro
 }
 
 // AuthorizedPasswords_list returns a list of users with passwords.
-func (c *Conn) AuthorizedPasswords_list() (users []string, err error) {
+func (c *Client) AuthorizedPasswords_list() (users []string, err error) {
 	resp := new(struct {
 		Total int
 		Users []string
@@ -36,7 +36,7 @@ func (c *Conn) AuthorizedPasswords_list() (users []string, err error) {
 }
 
 // AuthorizedPasswords_list removes a password for a given user.
-func (c *Conn) AuthorizedPasswords_remove(user string) error {
+func (c *Client) AuthorizedPasswords_remove(user string) error {
 	_, err := c.sendCmd(&request{
 		AQ: "AuthorizedPasswords_remove",
 		Args: &struct {

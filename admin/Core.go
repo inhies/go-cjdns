@@ -3,7 +3,7 @@ package admin
 import "errors"
 
 // Core_exit tells cjdns to shutdown
-func (c *Conn) Core_exit() error {
+func (c *Client) Core_exit() error {
 	resp := new(struct{ Error string })
 
 	pack, err := c.sendCmd(&request{AQ: "Core_exit"})

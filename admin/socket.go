@@ -32,7 +32,7 @@ func (p *packet) Decode(v interface{}) error {
 	return p.dec.Decode(v)
 }
 
-func (a *Conn) readFromConn() {
+func (a *Client) readFromConn() {
 	var (
 		b    = make([]byte, 69632)
 		r    = new(response)
@@ -82,7 +82,7 @@ func (a *Conn) readFromConn() {
 	}
 }
 
-func (c *Conn) writeToConn() {
+func (c *Client) writeToConn() {
 	c.enc = bencode.NewEncoder(c.Conn)
 
 	var req *request
@@ -124,7 +124,7 @@ type request struct {
 	Txid   string      `bencode:"txid"`
 }
 
-func (a *Conn) sendCmd(req *request) (response *packet, err error) {
+func (a *Client) sendCmd(req *request) (response *packet, err error) {
 	req.Txid = newTxid()
 
 	//create the channel to receive data back on
@@ -181,7 +181,7 @@ func (a *Conn) sendCmd(req *request) (response *packet, err error) {
 }
 
 // cookie requests a cookie from CJDNS
-func (a *Conn) cookie() (string, error) {
+func (a *Client) cookie() (string, error) {
 	pack, err := a.sendCmd(&request{Q: "cookie"})
 	if err != nil {
 		return "", err
@@ -192,7 +192,7 @@ func (a *Conn) cookie() (string, error) {
 	return r.Cookie, pack.Decode(r)
 }
 
-func (a *Conn) registerLogChan(streamId string, c chan<- *LogMessage) {
+func (a *Client) registerLogChan(streamId string, c chan<- *LogMessage) {
 	a.mu.Lock()
 	if a.logStreams == nil {
 		a.logStreams = make(map[string]chan<- *LogMessage)

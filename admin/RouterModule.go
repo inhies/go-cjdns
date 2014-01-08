@@ -3,7 +3,7 @@ package admin
 import "errors"
 
 //RouterModule_lookup returns a single path for an address. Not sure what this is used for
-func (c *Conn) RouterModule_lookup(address string) (response map[string]interface{}, err error) {
+func (c *Client) RouterModule_lookup(address string) (response map[string]interface{}, err error) {
 	var (
 		args = &struct {
 			Address string `bencode:"address"`
@@ -21,7 +21,7 @@ func (c *Conn) RouterModule_lookup(address string) (response map[string]interfac
 
 // Pings the specified IPv6 address or switch label and will timeout if it takes longer than the specified timeout period.
 // CJDNS will fallback to its own timeout if the a zero timeout is given.
-func (c *Conn) RouterModule_pingNode(addr string, timeout int) (ms int, version string, err error) {
+func (c *Client) RouterModule_pingNode(addr string, timeout int) (ms int, version string, err error) {
 	args := &struct {
 		Path    string `bencode:"path"`
 		Timeout int    `bencode:"timeout,omitempty"`
