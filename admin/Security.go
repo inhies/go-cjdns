@@ -1,12 +1,7 @@
 package admin
 
-// Security_noFiles removes the ability to create new files from cjdns.
-// It is recommended to always set this.
-func (c *Conn) Security_noFiles() error {
-	_, err := c.sendCmd(&request{AQ: "Security_noFiles"})
-	return err
-}
-
+// Security_setUser sets the user ID which cjdns is running under to a different user.
+// This function allows cjdns to shed privileges after starting up.
 func (c *Conn) Security_setUser(user string) error {
 	_, err := c.sendCmd(&request{
 		AQ: "Security_setUser",

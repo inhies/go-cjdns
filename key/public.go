@@ -1,6 +1,7 @@
 package key
 
 import (
+	"bytes"
 	"crypto/sha512"
 	"errors"
 	"net"
@@ -175,4 +176,9 @@ func (k *Public) IP() net.IP {
 func (k *Public) makeIPv6() net.IP {
 	out := hashTwice(k[:])
 	return net.IP(out)
+}
+
+// Equal returns true if key and x and the same public key.
+func (key *Public) Equal(x *Public) bool {
+	return bytes.Equal(key[:], x[:])
 }
