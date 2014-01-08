@@ -27,6 +27,7 @@ type Client struct {
 	AdminLog            *AdminLog
 	AuthorizedPasswords *AuthorizedPasswords
 	Core                *Core
+	EthInterface        *EthInterface
 	password            string
 	addr                *net.UDPAddr
 	enc                 *bencode.Encoder
@@ -83,6 +84,7 @@ func Connect(config *CjdnsAdminConfig) (admin *Client, err error) {
 	admin.Admin = &Admin{admin}
 	admin.AuthorizedPasswords = &AuthorizedPasswords{admin}
 	admin.Core = &Core{admin}
+	admin.EthInterface = &EthInterface{admin}
 
 	go admin.readFromConn()
 	go admin.writeToConn()

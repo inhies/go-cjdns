@@ -2,6 +2,8 @@ package admin
 
 import "github.com/inhies/go-cjdns/key"
 
+type EthInterface struct{ client *Client }
+
 const (
 	BeaconDisable       = 0 //  No beacons are sent and incoming beacon messages are discarded.
 	BeaconAccept        = 1 //  No beacons are sent but if an incoming beacon is received, it is acted upon.
@@ -11,14 +13,14 @@ const (
 // ETHInterface_new creates a new ETHInterface and bind it to a device.
 // Use the returned iface number with ETHInterface_beginConnection and
 // ETHInterface_beacon.
-func (c *Client) ETHInterface_new(device string) (iface int, err error) {
+func (e *EthInterface) New(device string) (iface int, err error) {
 	args := &struct {
 		BindDevice string `bencode:"bindDevice"`
 	}{device}
 
 	resp := new(struct{ InterfaceNumber int })
 
-	pack, err := c.sendCmd(&request{AQ: "ETHInterface_new", Args: args})
+	pack, err := e.client.sendCmd(&request{AQ: "ETHInterface_new", Args: args})
 	if err == nil {
 		err = pack.Decode(resp)
 	}
@@ -27,14 +29,14 @@ func (c *Client) ETHInterface_new(device string) (iface int, err error) {
 
 // ETHInterface_beginConnection connects an ETHInterface to another computer which has an ETHInterface running.
 // Use iface 0 for the first interface.
-func (c *Client) ETHInterface_beginConnection(iface int, mac, pass string, pubKey key.Public) error {
+func (e *EthInterface) BeginConnection(iface int, mac, pass string, pubKey key.Public) error {
 	args := &struct {
 		InterfaceNumber int        `bencode:"interfaceNumber"`
 		Password        string     `bencode:"password"`
 		MacAddress      string     `bencode:"MacAddress"`
 		PublicKey       key.Public `bencode:"publicKey"`
 	}{iface, pass, mac, pubKey}
-	_, err := c.sendCmd(&request{AQ: "ETHInterface_beginConnection", Args: args})
+	_, err := e.client.sendCmd(&request{AQ: "ETHInterface_beginConnection", Args: args})
 	return err
 }
 
@@ -46,7 +48,7 @@ func (c *Client) ETHInterface_beginConnection(iface int, mac, pass string, pubKe
 //
 // state is the state to switch to, if -1 the current state will be queried only.
 // See BeaconDisable, BeaconAccept, and BeaconAcceptAndSend.
-func (c *Client) ETHInterface_beacon(iface int, state int) (currentState int, stateDescription string, err error) {
+func (e *EthInterface) Beacon(iface int, state int) (currentState int, stateDescription string, err error) {
 	args := &struct {
 		InterfaceNumber int `bencode:"interfaceNumber"`
 		State           int `bencode:"state"`
@@ -57,7 +59,7 @@ func (c *Client) ETHInterface_beacon(iface int, state int) (currentState int, st
 		StateName string
 	})
 
-	pack, err := c.sendCmd(&request{AQ: "ETHInterface_beacon", Args: args})
+	pack, err := e.client.sendCmd(&request{AQ: "ETHInterface_beacon", Args: args})
 	if err == nil {
 		err = pack.Decode(resp)
 	}
