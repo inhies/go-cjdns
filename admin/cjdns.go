@@ -23,16 +23,17 @@ type CjdnsAdminConfig struct {
 
 // Conn is an object for interacting with the CJDNS administration port
 type Client struct {
-	Admin      *Admin
-	AdminLog   *AdminLog
-	password   string
-	addr       *net.UDPAddr
-	enc        *bencode.Encoder
-	Conn       *net.UDPConn
-	mu         sync.Mutex
-	queries    chan *request
-	responses  map[string]chan *packet
-	logStreams map[string]chan<- *LogMessage
+	Admin               *Admin
+	AdminLog            *AdminLog
+	AuthorizedPasswords *AuthorizedPasswords
+	password            string
+	addr                *net.UDPAddr
+	enc                 *bencode.Encoder
+	Conn                *net.UDPConn
+	mu                  sync.Mutex
+	queries             chan *request
+	responses           map[string]chan *packet
+	logStreams          map[string]chan<- *LogMessage
 }
 
 func Connect(config *CjdnsAdminConfig) (admin *Client, err error) {
@@ -79,6 +80,8 @@ func Connect(config *CjdnsAdminConfig) (admin *Client, err error) {
 
 	admin.AdminLog = &AdminLog{admin}
 	admin.Admin = &Admin{admin}
+	admin.AuthorizedPasswords = &AuthorizedPasswords{admin}
+
 	go admin.readFromConn()
 	go admin.writeToConn()
 	return admin, err

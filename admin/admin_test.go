@@ -143,16 +143,16 @@ func TestAuthorizedPasswords(t *testing.T) {
 	user := "someguy"
 	pass := "hackme"
 
-	if err := c.AuthorizedPasswords_add(user, pass, 0); err != nil {
+	if err := c.AuthorizedPasswords.Add(user, pass, 0); err != nil {
 		t.Error("failed to add password to cjdns,", err)
 		return
 	}
-	if err := c.AuthorizedPasswords_add(user, pass, 0); err != nil && !IsPasswordAlreadyAdded(err) {
+	if err := c.AuthorizedPasswords.Add(user, pass, 0); err != nil && !IsPasswordAlreadyAdded(err) {
 		t.Error("failed to add password to cjdns again,", err)
 		return
 	}
 
-	users, err := c.AuthorizedPasswords_list()
+	users, err := c.AuthorizedPasswords.List()
 	if err != nil {
 		t.Error("failed to get list of password users from cjdns,", err)
 		return
@@ -170,13 +170,13 @@ func TestAuthorizedPasswords(t *testing.T) {
 		return
 	}
 
-	err = c.AuthorizedPasswords_remove(user)
+	err = c.AuthorizedPasswords.Remove(user)
 	if err != nil {
 		t.Error("failed to remove password for user,", err)
 		return
 	}
 
-	users, err = c.AuthorizedPasswords_list()
+	users, err = c.AuthorizedPasswords.List()
 	if err != nil {
 		t.Error("failed to get list of password users from cjdns", err)
 		return
