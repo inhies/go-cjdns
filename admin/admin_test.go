@@ -125,7 +125,7 @@ func BenchmarkLog2x64Shift(b *testing.B) {
 }
 
 func TestInterfaceController_peerStats(t *testing.T) {
-	peerStats, err := c.InterfaceController_peerStats()
+	peerStats, err := c.InterfaceController.PeerStats()
 	if err != nil {
 		t.Error("InterfaceController_peerStats failed,", err)
 	}

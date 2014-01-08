@@ -2,8 +2,10 @@ package admin
 
 import "github.com/inhies/go-cjdns/key"
 
-func (c *Client) InterfaceController_disconnectPeer(pubKey key.Public) error {
-	_, err := c.sendCmd(&request{
+type InterfaceController struct{ client *Client }
+
+func (i *InterfaceController) DisconnectPeer(pubKey key.Public) error {
+	_, err := i.client.sendCmd(&request{
 		AQ: "InterfaceController_disconnectPeer",
 		Args: &struct {
 			PubKey key.Public `bencode:"pubKey"`
@@ -61,7 +63,7 @@ type PeerStats struct {
 }
 
 // Returns stats on currently connected peers
-func (c *Client) InterfaceController_peerStats() ([]*PeerStats, error) {
+func (i *InterfaceController) PeerStats() ([]*PeerStats, error) {
 	var (
 		args = new(struct {
 			Page int `bencode:"page"`
@@ -81,7 +83,7 @@ func (c *Client) InterfaceController_peerStats() ([]*PeerStats, error) {
 	resp.More = true
 	for resp.More {
 		resp.More = false
-		if pack, err = c.sendCmd(req); err == nil {
+		if pack, err = i.client.sendCmd(req); err == nil {
 			err = pack.Decode(resp)
 		}
 		if err != nil {
