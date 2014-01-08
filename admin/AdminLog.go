@@ -2,6 +2,8 @@ package admin
 
 import "errors"
 
+type AdminLog struct{ client *Client }
+
 const (
 	// CJDNS log levels:
 	KEYS     = "KEYS"     // Not compiled in by default, contains private keys and other secret information.
@@ -25,7 +27,7 @@ func (m *LogMessage) String() string { return m.Message }
 
 // Subscribes you to receive logging updates based on the parameters that are set.
 // Set file to "" to log from all files, set line to -1 lo log from any line.
-func (a *Client) AdminLog_subscribe(level, file string, line int, c chan<- *LogMessage) (streamId string, err error) {
+func (a *AdminLog) Subscribe(level, file string, line int, c chan<- *LogMessage) (streamId string, err error) {
 	var pack *packet
 	req := &request{AQ: "AdminLog_subscribe"}
 	if file != "" {
@@ -57,7 +59,7 @@ func (a *Client) AdminLog_subscribe(level, file string, line int, c chan<- *LogM
 		req.Args = args
 	}
 
-	if pack, err = a.sendCmd(req); err != nil {
+	if pack, err = a.client.sendCmd(req); err != nil {
 		return
 	}
 	res := new(struct{ StreamId, Error string })
@@ -65,18 +67,18 @@ func (a *Client) AdminLog_subscribe(level, file string, line int, c chan<- *LogM
 		return
 	}
 
-	a.registerLogChan(res.StreamId, c)
+	a.client.registerLogChan(res.StreamId, c)
 	return res.StreamId, nil
 }
 
 // Removes the logging subscription so that you no longer recieve log info.
-func (a *Client) AdminLog_unsubscribe(streamId string) error {
+func (a *AdminLog) Unsubscribe(streamId string) error {
 	args := new(struct {
 		StreamId string `bencode:"streamId"`
 	})
 	args.StreamId = streamId
 
-	pack, err := a.sendCmd(&request{AQ: "AdminLog_unsubscribe", Args: args})
+	pack, err := a.client.sendCmd(&request{AQ: "AdminLog_unsubscribe", Args: args})
 	if err != nil {
 		return err
 	}
