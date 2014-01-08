@@ -25,7 +25,7 @@ func Test_FunctionCoverage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cjdnsFuncs, err := conn.Admin_availableFunctions()
+	cjdnsFuncs, err := conn.Admin.AvailableFunctions()
 	if err != nil {
 		t.Fatal(err)
 	}
