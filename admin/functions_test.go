@@ -30,7 +30,7 @@ func Test_FunctionCoverage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	v := reflect.TypeOf(&Conn{})
+	v := reflect.TypeOf(&Client{})
 	var ourFuncs = make(map[string]support)
 
 	// Loop over each of Conn's methods.
