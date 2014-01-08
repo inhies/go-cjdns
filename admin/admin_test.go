@@ -73,7 +73,7 @@ func TestAuth(t *testing.T) {
 }
 
 func TestAdmin_asyncEnabled(t *testing.T) {
-	_, err := c.Admin_asyncEnabled()
+	_, err := c.Admin.AsyncEnabled()
 	if err != nil {
 		t.Error("Admin_asyncEnabled failed,", err)
 	}
