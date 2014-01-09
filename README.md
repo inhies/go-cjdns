@@ -5,8 +5,8 @@ go-cjdns was recently restructured and has probably broken any programs that
 were using it. Sorry about that, but it's for the best, I promise. The code is
 much better organized now and will continue to be improved.
 
-[![GoDoc](http://godoc.org/github.com/inhies/go-cjdns?status.png)](http://godoc.org/github.com/inhies/go-cjdns)
-
+**Documentation:** [![GoDoc](http://godoc.org/github.com/inhies/go-cjdns?status.png)](http://godoc.org/github.com/inhies/go-cjdns)
+**Build Status:** [![Build Status](https://travis-ci.org/inhies/go-cjdns.png?branch=development)](https://travis-ci.org/inhies/go-cjdns)
 
 go-cjdns
 ========
