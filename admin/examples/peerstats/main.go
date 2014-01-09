@@ -15,7 +15,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	results, err := conn.InterfaceController_peerStats()
+	results, err := conn.InterfaceController.PeerStats()
 	if err != nil {
 		fmt.Println(err)
 		return
