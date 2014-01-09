@@ -34,6 +34,7 @@ type Client struct {
 	RouterModule        *RouterModule
 	SearchRunner        *SearchRunner
 	Security            *Security
+	SwitchPinger        *SwitchPinger
 	password            string
 	addr                *net.UDPAddr
 	enc                 *bencode.Encoder
@@ -97,6 +98,7 @@ func Connect(config *CjdnsAdminConfig) (admin *Client, err error) {
 	admin.RouterModule = &RouterModule{admin}
 	admin.SearchRunner = &SearchRunner{admin}
 	admin.Security = &Security{admin}
+	admin.SwitchPinger = &SwitchPinger{admin}
 
 	go admin.readFromConn()
 	go admin.writeToConn()
