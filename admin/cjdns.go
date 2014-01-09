@@ -33,6 +33,7 @@ type Client struct {
 	NodeStore           *NodeStore
 	RouterModule        *RouterModule
 	SearchRunner        *SearchRunner
+	Security            *Security
 	password            string
 	addr                *net.UDPAddr
 	enc                 *bencode.Encoder
@@ -95,6 +96,7 @@ func Connect(config *CjdnsAdminConfig) (admin *Client, err error) {
 	admin.NodeStore = &NodeStore{admin}
 	admin.RouterModule = &RouterModule{admin}
 	admin.SearchRunner = &SearchRunner{admin}
+	admin.Security = &Security{admin}
 
 	go admin.readFromConn()
 	go admin.writeToConn()
