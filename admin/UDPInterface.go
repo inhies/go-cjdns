@@ -2,12 +2,14 @@ package admin
 
 import "github.com/inhies/go-cjdns/key"
 
+type UDPInterface struct{ client *Client }
+
 // UDPInterface_beginConnection starts a direct connection to another node.
 // Note that returned error only pertains to loading connection details,
 // and will not convey the state of the connection itself.
 //
 // address has the form host:port.
-func (a *Client) UDPInterface_beginConnection(pubkey *key.Public, address string, interfaceNumber int, password string) error {
+func (u *UDPInterface) BeginConnection(pubkey *key.Public, address string, interfaceNumber int, password string) error {
 	var (
 		args = &struct {
 			Address        string      `bencode:"address"`
@@ -22,7 +24,7 @@ func (a *Client) UDPInterface_beginConnection(pubkey *key.Public, address string
 		err  error
 	)
 
-	if pack, err = a.sendCmd(req); err == nil {
+	if pack, err = u.client.sendCmd(req); err == nil {
 		err = pack.Decode(resp)
 	}
 	return err
@@ -31,7 +33,7 @@ func (a *Client) UDPInterface_beginConnection(pubkey *key.Public, address string
 // UDPInterface_new creates a new UDPInterface which is either bound to an address/port or not and returns an index number for the interface.
 //
 // laddr has the form host:port, if host is unspecified, it is assumed to be `0.0.0.0`.
-func (a *Client) UDPInterface_new(laddr string) (interfaceNumber int, err error) {
+func (u *UDPInterface) New(laddr string) (interfaceNumber int, err error) {
 	var (
 		args = new(struct {
 			Addr string `bencode:"bindAddress"`
@@ -42,7 +44,7 @@ func (a *Client) UDPInterface_new(laddr string) (interfaceNumber int, err error)
 		pack *packet
 	)
 
-	if pack, err = a.sendCmd(req); err == nil {
+	if pack, err = u.client.sendCmd(req); err == nil {
 		err = pack.Decode(resp)
 	}
 	return resp.InterfaceNumber, err
