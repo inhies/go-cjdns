@@ -5,15 +5,17 @@ import (
 	"net"
 )
 
-func (c *Client) IpTunnel_allowConnection(publicKey *key.Public, addr net.IP) (err error) {
+type IPTunnel struct{ client *Client }
+
+func (i *IPTunnel) AllowConnection(publicKey *key.Public, addr net.IP) (err error) {
 	if b := addr.To4; b != nil {
-		_, err = c.sendCmd(&request{AQ: "IpTunnel_allowConnection",
+		_, err = i.client.sendCmd(&request{AQ: "IpTunnel_allowConnection",
 			Args: &struct {
 				Ip     net.IP      `bencode:"ip4Address"`
 				PubKey *key.Public `bencode:"publicKeyOfAuthorizedNode"`
 			}{addr, publicKey}})
 	} else {
-		_, err = c.sendCmd(&request{AQ: "IpTunnel_allowConnections",
+		_, err = i.client.sendCmd(&request{AQ: "IpTunnel_allowConnections",
 			Args: &struct {
 				Ip     net.IP      `bencode:"ip6Address"`
 				PubKey *key.Public `bencode:"publicKeyOfAuthorizedNode"`
@@ -22,8 +24,8 @@ func (c *Client) IpTunnel_allowConnection(publicKey *key.Public, addr net.IP) (e
 	return
 }
 
-func (c *Client) IpTunnel_connectTo(publicKey *key.Public) error {
-	_, err := c.sendCmd(&request{AQ: "IpTunnel_connectTo",
+func (i *IPTunnel) ConnectTo(publicKey *key.Public) error {
+	_, err := i.client.sendCmd(&request{AQ: "IpTunnel_connectTo",
 		Args: &struct {
 			PubKey *key.Public `bencode:"publicKeyOfNodeToConnectTo"`
 		}{publicKey}})
@@ -32,21 +34,21 @@ func (c *Client) IpTunnel_connectTo(publicKey *key.Public) error {
 }
 
 // IpTunnel_listConnections returns a list of all current IP tunnels
-func (c *Client) IpTunnel_listConnections() (tunnelIndexes []int, err error) {
+func (i *IPTunnel) ListConnections() (tunnelIndexes []int, err error) {
 	resp := new(struct {
 		List []int
 	})
 
 	var pack *packet
-	pack, err = c.sendCmd(&request{AQ: "IpTunnel_listConnections"})
+	pack, err = i.client.sendCmd(&request{AQ: "IpTunnel_listConnections"})
 	if err == nil {
 		err = pack.Decode(resp)
 	}
 	return resp.List, err
 }
 
-func (c *Client) IpTunnel_removeConnection(connection int) error {
-	_, err := c.sendCmd(&request{AQ: "IpTunnel_removeConnection",
+func (i *IPTunnel) RemoveConnection(connection int) error {
+	_, err := i.client.sendCmd(&request{AQ: "IpTunnel_removeConnection",
 		Args: &struct {
 			Connection int `bencode:"connection"`
 		}{connection}})
@@ -60,10 +62,10 @@ type IpTunnelConnection struct {
 	Outgoing   bool
 }
 
-func (c *Client) IpTunnel_showConnection(connection int) (*IpTunnelConnection, error) {
+func (i *IPTunnel) ShowConnection(connection int) (*IpTunnelConnection, error) {
 	resp := new(IpTunnelConnection)
 
-	pack, err := c.sendCmd(&request{AQ: "IpTunnel_showConnection",
+	pack, err := i.client.sendCmd(&request{AQ: "IpTunnel_showConnection",
 		Args: &struct {
 			Connection int `bencode:"connection"`
 		}{connection}})
