@@ -3,5 +3,7 @@ language: go
 go:
  - release
 
-after_success:
-  - go test
+install:
+ - go get -v -t ./...
+
+script: go build -v ./...
