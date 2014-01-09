@@ -83,7 +83,7 @@ var table Routes
 
 func TestNodeStore_dumpTable(t *testing.T) {
 	var err error
-	table, err = c.NodeStore_dumpTable()
+	table, err = c.NodeStore.DumpTable()
 	if err != nil {
 		t.Error("NodeStore_dumpTable failed,", err)
 	}

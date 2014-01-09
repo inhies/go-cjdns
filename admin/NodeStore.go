@@ -11,6 +11,8 @@ import (
 
 const magicalLinkConstant = 5366870 //Determined by cjd way back in the dark ages.
 
+type NodeStore struct{ client *Client }
+
 type Route struct {
 	IP      *net.IP
 	Link    Link
@@ -182,7 +184,7 @@ func (rs Routes) Hops(destination Path) (hops Routes) {
 }
 
 // NodeStore_dumpTable will return cjdns's routing table.
-func (c *Client) NodeStore_dumpTable() (routingTable Routes, err error) {
+func (n *NodeStore) DumpTable() (routingTable Routes, err error) {
 	var (
 		args = new(struct {
 			Page int `bencode:"page"`
@@ -201,7 +203,7 @@ func (c *Client) NodeStore_dumpTable() (routingTable Routes, err error) {
 	resp.More = true
 	for resp.More {
 		resp.More = false
-		if pack, err = c.sendCmd(req); err == nil {
+		if pack, err = n.client.sendCmd(req); err == nil {
 			err = pack.Decode(resp)
 		}
 		if err != nil {

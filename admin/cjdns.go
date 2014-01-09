@@ -30,6 +30,7 @@ type Client struct {
 	EthInterface        *EthInterface
 	InterfaceController *InterfaceController
 	IPTunnel            *IPTunnel
+	NodeStore           *NodeStore
 	password            string
 	addr                *net.UDPAddr
 	enc                 *bencode.Encoder
@@ -89,6 +90,7 @@ func Connect(config *CjdnsAdminConfig) (admin *Client, err error) {
 	admin.EthInterface = &EthInterface{admin}
 	admin.InterfaceController = &InterfaceController{admin}
 	admin.IPTunnel = &IPTunnel{admin}
+	admin.NodeStore = &NodeStore{admin}
 
 	go admin.readFromConn()
 	go admin.writeToConn()
