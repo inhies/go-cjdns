@@ -2,8 +2,10 @@ package admin
 
 import "errors"
 
+type RouterModule struct{ client *Client }
+
 //RouterModule_lookup returns a single path for an address. Not sure what this is used for
-func (c *Client) RouterModule_lookup(address string) (response map[string]interface{}, err error) {
+func (r *RouterModule) Lookup(address string) (response map[string]interface{}, err error) {
 	var (
 		args = &struct {
 			Address string `bencode:"address"`
@@ -12,7 +14,7 @@ func (c *Client) RouterModule_lookup(address string) (response map[string]interf
 		pack *packet
 	)
 
-	pack, err = c.sendCmd(&request{AQ: "RouterModule_lookup", Args: args})
+	pack, err = r.client.sendCmd(&request{AQ: "RouterModule_lookup", Args: args})
 	if err == nil {
 		err = pack.Decode(response)
 	}
@@ -21,7 +23,7 @@ func (c *Client) RouterModule_lookup(address string) (response map[string]interf
 
 // Pings the specified IPv6 address or switch label and will timeout if it takes longer than the specified timeout period.
 // CJDNS will fallback to its own timeout if the a zero timeout is given.
-func (c *Client) RouterModule_pingNode(addr string, timeout int) (ms int, version string, err error) {
+func (r *RouterModule) PingNode(addr string, timeout int) (ms int, version string, err error) {
 	args := &struct {
 		Path    string `bencode:"path"`
 		Timeout int    `bencode:"timeout,omitempty"`
@@ -34,7 +36,7 @@ func (c *Client) RouterModule_pingNode(addr string, timeout int) (ms int, versio
 	})
 
 	var pack *packet
-	pack, err = c.sendCmd(&request{AQ: "RouterModule_pingNode", Args: args})
+	pack, err = r.client.sendCmd(&request{AQ: "RouterModule_pingNode", Args: args})
 	if err == nil {
 		err = pack.Decode(resp)
 	}
