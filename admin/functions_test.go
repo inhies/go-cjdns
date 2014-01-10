@@ -1,4 +1,4 @@
-// +build functions
+// +build functions all
 
 package admin
 
