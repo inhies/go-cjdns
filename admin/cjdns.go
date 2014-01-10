@@ -39,7 +39,7 @@ type Client struct {
 	password            string
 	addr                *net.UDPAddr
 	enc                 *bencode.Encoder
-	Conn                *net.UDPConn
+	conn                *net.UDPConn
 	mu                  sync.Mutex
 	queries             chan *request
 	responses           map[string]chan *packet
@@ -83,7 +83,7 @@ func Connect(config *CjdnsAdminConfig) (admin *Client, err error) {
 	admin = &Client{
 		password:  config.Password,
 		addr:      addr,
-		Conn:      conn,
+		conn:      conn,
 		queries:   make(chan *request),
 		responses: make(map[string]chan *packet),
 	}

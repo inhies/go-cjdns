@@ -42,7 +42,7 @@ func (a *Client) readFromConn() {
 	)
 	for {
 		// read into local buffer
-		n, err = a.Conn.Read(b)
+		n, err = a.conn.Read(b)
 		if err != nil {
 			// this probably will mess more stuff up down the line.
 			pack = &packet{err: err}
@@ -83,7 +83,7 @@ func (a *Client) readFromConn() {
 }
 
 func (c *Client) writeToConn() {
-	c.enc = bencode.NewEncoder(c.Conn)
+	c.enc = bencode.NewEncoder(c.conn)
 
 	var req *request
 	var err error
