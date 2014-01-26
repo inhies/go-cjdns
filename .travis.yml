@@ -6,6 +6,8 @@ go:
 before_install:
  - git clone https://github.com/cjdelisle/cjdns
  - ./cjdns/do
+ - ./cjdns/cjdroute --genconf > cjdroute.conf
 
 install:
- - go get -v -t ./...
+ - go get -v
+ 
