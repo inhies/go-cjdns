@@ -1,7 +1,12 @@
 language: go
 
 go:
- - release
+ - 1.2
+
+before_install:
+ - sudo apt-get install git nodejs build-essential
+ - git clone https://github.com/cjdelisle/cjdns
+ - ./cjdns/do
 
 install:
  - go get -v -t ./...
