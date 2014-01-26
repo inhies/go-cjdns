@@ -16,4 +16,11 @@ install:
  - cd admin && go get -v
  - cd ../config && go get -v
  - cd ../key && go get -v
+
+script:
+ - cd ../admin && go test -tags cjdns
+ - cd ../config && go test -tags cjdns
+ - cd ../key && go test -tags cjdns
+ 
+after_script:
  - sudo killall cjdroute
