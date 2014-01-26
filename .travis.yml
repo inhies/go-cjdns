@@ -7,7 +7,5 @@ before_install:
  - git clone https://github.com/cjdelisle/cjdns
  - ./cjdns/do
  - ./cjdns/cjdroute --genconf > cjdroute.conf
-
-install:
- - go get -v
- 
+ - ADMINPASSWORD=`grep password\" cjdroute.conf | cut -d "}" -f2 | cut -c22-999 | cut -d "\"" -f1`
+ - echo $ADMINPASSWORD
