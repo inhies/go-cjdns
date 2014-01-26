@@ -7,6 +7,6 @@ before_install:
  - git clone https://github.com/cjdelisle/cjdns
  - ./cjdns/do
  - ./cjdns/cjdroute --genconf > cjdroute.conf
- - ADMINPASSWORD=`grep password\" cjdroute.conf | cut -d "}" -f2 | cut -c22-999 | cut -d "\"" -f1`
- - echo "{\"addr\":\"127.0.0.1\",\"port\":11234, \"password\":\"$ADMINPASSWORD\",\"config\":\"cjdroute.conf\"}" > .cjdnsadmin
+ - ADMINPASSWORD=`grep password\" cjdroute.conf | cut -d "}" -f2 | cut -c21-53`
+ - echo "{\"addr\":\"127.0.0.1\",\"port\":11234, \"password\":$ADMINPASSWORD,\"config\":\"cjdroute.conf\"}" > .cjdnsadmin
  - more .cjdnsadmin
