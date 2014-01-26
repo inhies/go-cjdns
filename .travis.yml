@@ -9,4 +9,12 @@ before_install:
  - ./cjdns/cjdroute --genconf > cjdroute.conf
  - ADMINPASSWORD=`grep password\" cjdroute.conf | cut -d "}" -f2 | cut -c21-53`
  - echo "{\"addr\":\"127.0.0.1\",\"port\":11234,\"password\":"$ADMINPASSWORD",\"config\":\"cjdroute.conf\"}" > .cjdnsadmin
- - more .cjdnsadmin
+ - sudo ./cjdns/cjdroute < cjdroute.conf
+ 
+install:
+ - cd admin && go get -v
+ - cd ../config && go get -v
+ - cd ../key && go get -v
+ 
+after_install:
+ - sudo killall cjdroute
