@@ -16,6 +16,7 @@ install:
  - cd admin && go get -v
  - cd ../config && go get -v
  - cd ../key && go get -v
+ - go get github.com/smartystreets/goconvey/convey
 
 script:
  - cd ../admin && go test -tags cjdns
