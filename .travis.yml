@@ -1,7 +1,27 @@
 language: go
 
 go:
- - release
+ - 1.2
 
+before_install:
+ - git clone https://github.com/cjdelisle/cjdns
+ - ./cjdns/do
+ - ./cjdns/cjdroute --genconf > cjdroute.conf
+ - ADMINPASSWORD=`grep password\" cjdroute.conf | cut -d "}" -f2 | cut -c21-53`
+ - echo "{\"addr\":\"127.0.0.1\",\"port\":11234,\"password\":"$ADMINPASSWORD",\"config\":\"cjdroute.conf\"}" > ~/.cjdnsadmin
+ - sudo ./cjdns/cjdroute < cjdroute.conf
+ 
 install:
- - go get -v -t ./...
+ - cd admin && go get -v
+ - cd ../config && go get -v
+ - cd ../key && go get -v
+ - go get github.com/smartystreets/goconvey/convey
+
+script:
+ - cd ../admin && go test -tags cjdns
+ - cd ../config && go test -tags cjdns
+ - cd ../key && go test -tags cjdns
+ 
+after_script:
+ - sudo killall cjdroute
+ - rm ~/.cjdnsadmin
