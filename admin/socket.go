@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/3M3RY/go-bencode"
+	"github.com/ehmry/go-bencode"
 	"io"
 	"math/rand"
 	"time"
