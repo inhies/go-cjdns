@@ -35,7 +35,7 @@ type Config struct {
 	Logging Logging
 
 	// Fork to background
-	Background bool `json:"NoBackground"`
+	Background int `json:"NoBackground"`
 
 	//the internal config file version (mostly unused)
 	Version int `json:"version"`
@@ -135,6 +135,6 @@ type TunnelAllowed struct {
 //SecurityBlock and create the proper RawSecurity interface{} before
 //marshalling
 type SecurityBlock struct {
-	NoFiles bool
+	NoFiles int
 	SetUser string
 }

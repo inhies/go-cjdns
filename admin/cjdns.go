@@ -3,7 +3,7 @@ package admin
 
 import (
 	"encoding/json"
-	"github.com/3M3RY/go-bencode"
+	"github.com/ehmry/go-bencode"
 	//"io"
 	"io/ioutil"
 	"math/rand"

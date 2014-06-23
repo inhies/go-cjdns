@@ -64,7 +64,7 @@ func LoadMinConfig(filein string) (*Config, error) {
 	for _, value := range object["security"].([]interface{}) {
 		v := reflect.ValueOf(value)
 		if value == "nofiles" {
-			structured.Security.NoFiles = true
+			structured.Security.NoFiles = 1
 		} else if v.Kind() == reflect.Map {
 			user := value.(map[string]interface{})
 			structured.Security.SetUser = user["setuser"].(string)
@@ -105,7 +105,7 @@ func SaveConfig(fileout string, config interface{}, perms os.FileMode) error {
 		// Parse the nicely formatted security section, and set the raw values
 		// for JSON marshalling
 		newSecurity := make([]interface{}, 0)
-		if config.Security.NoFiles {
+		if config.Security.NoFiles != 0 {
 			newSecurity = append(newSecurity, "nofiles")
 		}
 		setuser := make(map[string]interface{})
