@@ -1,3 +1,5 @@
+// +build admin
+
 package admin
 
 import (
@@ -48,13 +50,6 @@ func BenchmarkPing(b *testing.B) {
 		if err := c.Ping(); err != nil {
 			b.Error("Failed to ping,", err)
 		}
-	}
-}
-
-func TestMemory(t *testing.T) {
-	_, err := c.Memory()
-	if err != nil {
-		t.Error(err)
 	}
 }
 

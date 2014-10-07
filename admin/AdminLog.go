@@ -60,10 +60,14 @@ func (a *Conn) AdminLog_subscribe(level, file string, line int, c chan<- *LogMes
 	if pack, err = a.sendCmd(req); err != nil {
 		return
 	}
-	res := new(struct{ StreamId, Error string })
+	res := new(struct {
+		StreamId string `bencode:"streamId"`
+		Error    string `bencode:"error"`
+	})
 	if err = pack.Decode(res); err != nil {
 		return
 	}
+	streamId = res.StreamId
 	if res.Error != "none" {
 		err = errors.New(res.Error)
 		return
