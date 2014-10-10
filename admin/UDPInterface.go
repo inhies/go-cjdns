@@ -1,6 +1,6 @@
 package admin
 
-import "github.com/inhies/go-cjdns/key"
+import "github.com/ehmry/go-cjdns/key"
 
 // UDPInterface_beginConnection starts a direct connection to another node.
 // Note that returned error only pertains to loading connection details,

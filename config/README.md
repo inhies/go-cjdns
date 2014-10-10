@@ -17,7 +17,7 @@ This package also contains a function `SaveConfig()` which will accept either a 
      package main
 	
      import (
-          "github.com/inhies/go-cjdns/config"
+          "github.com/ehmry/go-cjdns/config"
      )
 	
      func main() {

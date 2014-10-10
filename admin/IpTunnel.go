@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"github.com/inhies/go-cjdns/key"
+	"github.com/ehmry/go-cjdns/key"
 	"net"
 )
 
