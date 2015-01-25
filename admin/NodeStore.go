@@ -213,6 +213,48 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 	return resp.RoutingTable, err
 }
 
+type Parent struct {
+	IP               string
+	ParentChildLabel string
+}
+
+type EncodingScheme struct {
+	BitCount  int
+	Prefix    string
+	PrefixLen int
+}
+
+type Node struct {
+	RouteLabel      string
+	BestParent      Parent
+	EncodingScheme  []*EncodingScheme
+	Key             string
+	LinkCount       int
+	ProtocolVersion int
+	Reach           int
+}
+
+func (n *Node) String() string {
+	return n.RouteLabel
+}
+
+func (c *Conn) NodeStore_nodeForAddr(ip string) (n *Node, err error) {
+	var (
+		args = &struct {
+			Ip string `bencode:"ip"`
+		}{ip}
+		req  = &request{AQ: "NodeStore_nodeForAddr", Args: args}
+		pack *packet
+		resp = new(struct{ Result Node })
+	)
+
+	if pack, err = c.sendCmd(req); err == nil {
+		err = pack.Decode(resp)
+		n = &resp.Result
+	}
+	return
+}
+
 // Peers returns a Routes object representing routes
 // directly connected to a given IP.
 func (rs Routes) Peers(ip net.IP) (peerRoutes Routes) {

@@ -76,11 +76,18 @@ func TestAdmin_asyncEnabled(t *testing.T) {
 
 var table Routes
 
-func TestNodeStore_dumpTable(t *testing.T) {
+func TestNodeStor(t *testing.T) {
 	var err error
 	table, err = c.NodeStore_dumpTable()
 	if err != nil {
 		t.Error("NodeStore_dumpTable failed,", err)
+	}
+
+	for _, r := range table {
+		_, err := c.NodeStore_nodeForAddr(r.IP.String())
+		if err != nil {
+			t.Fatal("NodeStore_nodeForAddr failed,", err)
+		}
 	}
 }
 
