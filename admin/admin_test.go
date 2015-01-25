@@ -84,9 +84,17 @@ func TestNodeStor(t *testing.T) {
 	}
 
 	for _, r := range table {
-		_, err := c.NodeStore_nodeForAddr(r.IP.String())
+		n, err := c.NodeStore_nodeForAddr(r.IP.String())
 		if err != nil {
 			t.Fatal("NodeStore_nodeForAddr failed,", err)
+		}
+
+		for i := 0; i < n.LinkCount; i++ {
+			_, err = c.NodeStore_getLink(r.IP.String(), i)
+			if err != nil {
+				t.Fatal("NodeStore_getLink failed,", err)
+			}
+			return
 		}
 	}
 }

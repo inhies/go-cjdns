@@ -224,7 +224,7 @@ type EncodingScheme struct {
 	PrefixLen int
 }
 
-type Node struct {
+type StoreNode struct {
 	RouteLabel      string
 	BestParent      Parent
 	EncodingScheme  []*EncodingScheme
@@ -234,23 +234,47 @@ type Node struct {
 	Reach           int
 }
 
-func (n *Node) String() string {
+func (n *StoreNode) String() string {
 	return n.RouteLabel
 }
 
-func (c *Conn) NodeStore_nodeForAddr(ip string) (n *Node, err error) {
+type StoreLink struct {
+	LinkState                     int
+	Parent, Child                 string
+	CannonicalLabel               string
+	InverseLinkEncodingFormNumber int
+	IsOneHop                      bool
+}
+
+func (c *Conn) NodeStore_getLink(parent string, link int) (l *StoreLink, err error) {
+	req := &request{
+		AQ: "NodeStore_getLink",
+		Args: &struct {
+			Parent string `bencode:"parent"`
+			Link   int    `bencode:"linkNum"`
+		}{parent, link},
+	}
+
+	var pack *packet
+	l = new(StoreLink)
+	if pack, err = c.sendCmd(req); err == nil {
+		err = pack.Decode(&struct{ Result *StoreLink }{l})
+	}
+	return
+}
+
+func (c *Conn) NodeStore_nodeForAddr(ip string) (n *StoreNode, err error) {
 	var (
 		args = &struct {
 			Ip string `bencode:"ip"`
 		}{ip}
 		req  = &request{AQ: "NodeStore_nodeForAddr", Args: args}
 		pack *packet
-		resp = new(struct{ Result Node })
 	)
 
+	n = new(StoreNode)
 	if pack, err = c.sendCmd(req); err == nil {
-		err = pack.Decode(resp)
-		n = &resp.Result
+		err = pack.Decode(&struct{ Result *StoreNode }{n})
 	}
 	return
 }
