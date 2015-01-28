@@ -10,7 +10,10 @@ import (
 	"strconv"
 )
 
-var ErrNotInTable = errors.New("Node not in local routing table")
+var (
+	ErrNotInTable = errors.New("Node not in local routing table")
+	ErrParseIP = errors.New("CJDNS node failed to parse IP")
+)
 
 const magicalLinkConstant = 5366870 //Determined by cjd way back in the dark ages.
 
@@ -279,7 +282,10 @@ func (c *Conn) NodeStore_nodeForAddr(ip string) (n *StoreNode, err error) {
 	if pack, err = c.sendCmd(req); err == nil {
 		err = pack.Decode(&struct{ Result *StoreNode }{n})
 	}
-	if n.RouteLabel == "" {
+	if err != nil && err.Error() == "parse_ip" {
+		err = ErrParseIP
+	}
+	if err == nil && n.RouteLabel == "" {
 		n = nil
 		err = ErrNotInTable
 	}
