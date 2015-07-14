@@ -271,15 +271,18 @@ func (c *Conn) NodeStore_getLink(parent string, link int) (l *StoreLink, err err
 
 func (c *Conn) NodeStore_nodeForAddr(ip string) (n *StoreNode, err error) {
 	var (
-		args = &struct {
-			Ip string `bencode:"ip"`
-		}{ip}
-		req  = &request{AQ: "NodeStore_nodeForAddr", Args: args}
+		req = request {AQ: "NodeStore_nodeForAddr"}
 		pack *packet
 	)
 
+	if ip != "" {
+		req.Args = &struct {
+			Ip string `bencode:"ip"`
+		}{ip}
+	}
+
 	n = new(StoreNode)
-	if pack, err = c.sendCmd(req); err == nil {
+	if pack, err = c.sendCmd(&req); err == nil {
 		err = pack.Decode(&struct{ Result *StoreNode }{n})
 	}
 	if err != nil && err.Error() == "parse_ip" {
