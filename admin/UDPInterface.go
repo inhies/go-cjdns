@@ -13,14 +13,14 @@ func (a *Conn) UDPInterface_beginConnection(pubkey, address string, interfaceNum
 			Password       string `bencode:"password"`
 			PublicKey      string `bencode:"publicKey"`
 		}{address, interfaceNumber, password, pubkey}
-		req  = &request{AQ: "UDPInterface_beginConnection", Args: args}
+		req  = request{AQ: "UDPInterface_beginConnection", Args: args}
 		resp = new(struct{ InterfaceNumber int })
 
 		pack *packet
 		err  error
 	)
 
-	if pack, err = a.sendCmd(req); err == nil {
+	if pack, err = a.sendCmd(&req); err == nil {
 		err = pack.Decode(resp)
 	}
 	return err
@@ -34,13 +34,13 @@ func (a *Conn) UDPInterface_new(laddr string) (interfaceNumber int, err error) {
 		args = &struct {
 			Addr string `bencode:"bindAddress"`
 		}{laddr}
-		req  = &request{AQ: "UDPInterface_new", Args: args}
+		req  = request{AQ: "UDPInterface_new", Args: args}
 		resp = new(struct{ InterfaceNumber int })
 
 		pack *packet
 	)
 
-	if pack, err = a.sendCmd(req); err == nil {
+	if pack, err = a.sendCmd(&req); err == nil {
 		err = pack.Decode(resp)
 	}
 	return resp.InterfaceNumber, err

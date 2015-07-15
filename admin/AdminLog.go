@@ -27,7 +27,7 @@ func (m *LogMessage) String() string { return m.Message }
 // Set file to "" to log from all files, set line to -1 lo log from any line.
 func (a *Conn) AdminLog_subscribe(level, file string, line int, c chan<- *LogMessage) (streamId string, err error) {
 	var pack *packet
-	req := &request{AQ: "AdminLog_subscribe"}
+	req := request{AQ: "AdminLog_subscribe"}
 	if file != "" {
 		if line != -1 {
 			args := new(struct {
@@ -57,7 +57,7 @@ func (a *Conn) AdminLog_subscribe(level, file string, line int, c chan<- *LogMes
 		req.Args = args
 	}
 
-	if pack, err = a.sendCmd(req); err != nil {
+	if pack, err = a.sendCmd(&req); err != nil {
 		return
 	}
 	res := new(struct {

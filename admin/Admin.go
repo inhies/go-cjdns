@@ -11,7 +11,7 @@ func (a *Conn) Admin_availableFunctions() (funcs map[string]map[string]AdminFunc
 		args = new(struct {
 			Page int `bencode:"page"`
 		})
-		req = &request{Q: "Admin_availableFunctions", Args: args}
+		req = request{Q: "Admin_availableFunctions", Args: args}
 
 		resp = &struct {
 			AvailableFunctions map[string]map[string]AdminFunc
@@ -23,7 +23,7 @@ func (a *Conn) Admin_availableFunctions() (funcs map[string]map[string]AdminFunc
 
 	for resp.More {
 		resp.More = false
-		if pack, err = a.sendCmd(req); err == nil {
+		if pack, err = a.sendCmd(&req); err == nil {
 			err = pack.Decode(resp)
 		}
 		if err != nil {

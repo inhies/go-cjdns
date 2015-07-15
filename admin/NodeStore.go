@@ -1,9 +1,9 @@
 package admin
 
 import (
-	"errors"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net"
 	"sort"
@@ -12,7 +12,7 @@ import (
 
 var (
 	ErrNotInTable = errors.New("Node not in local routing table")
-	ErrParseIP = errors.New("CJDNS node failed to parse IP")
+	ErrParseIP    = errors.New("CJDNS node failed to parse IP")
 )
 
 const magicalLinkConstant = 5366870 //Determined by cjd way back in the dark ages.
@@ -193,7 +193,7 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 		args = new(struct {
 			Page int `bencode:"page"`
 		})
-		req = &request{Q: "NodeStore_dumpTable", Args: args}
+		req = request{Q: "NodeStore_dumpTable", Args: args}
 
 		resp = new(struct {
 			More bool
@@ -207,7 +207,7 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 	resp.More = true
 	for resp.More {
 		resp.More = false
-		if pack, err = c.sendCmd(req); err == nil {
+		if pack, err = c.sendCmd(&req); err == nil {
 			err = pack.Decode(resp)
 		}
 		if err != nil {
@@ -253,7 +253,7 @@ type StoreLink struct {
 }
 
 func (c *Conn) NodeStore_getLink(parent string, link int) (l *StoreLink, err error) {
-	req := &request{
+	req := request{
 		AQ: "NodeStore_getLink",
 		Args: &struct {
 			Parent string `bencode:"parent"`
@@ -263,7 +263,7 @@ func (c *Conn) NodeStore_getLink(parent string, link int) (l *StoreLink, err err
 
 	var pack *packet
 	l = new(StoreLink)
-	if pack, err = c.sendCmd(req); err == nil {
+	if pack, err = c.sendCmd(&req); err == nil {
 		err = pack.Decode(&struct{ Result *StoreLink }{l})
 	}
 	return
@@ -271,7 +271,7 @@ func (c *Conn) NodeStore_getLink(parent string, link int) (l *StoreLink, err err
 
 func (c *Conn) NodeStore_nodeForAddr(ip string) (n *StoreNode, err error) {
 	var (
-		req = request {AQ: "NodeStore_nodeForAddr"}
+		req  = request{AQ: "NodeStore_nodeForAddr"}
 		pack *packet
 	)
 

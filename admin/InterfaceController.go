@@ -66,7 +66,7 @@ func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
 		args = new(struct {
 			Page int `bencode:"page"`
 		})
-		req = &request{AQ: "InterfaceController_peerStats", Args: args}
+		req = request{AQ: "InterfaceController_peerStats", Args: args}
 
 		resp = new(struct {
 			More  bool
@@ -81,7 +81,7 @@ func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
 	resp.More = true
 	for resp.More {
 		resp.More = false
-		if pack, err = c.sendCmd(req); err == nil {
+		if pack, err = c.sendCmd(&req); err == nil {
 			err = pack.Decode(resp)
 		}
 		if err != nil {

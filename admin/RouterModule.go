@@ -7,7 +7,7 @@ import "errors"
 //
 // Timeout and nearbyPath default when there are 0 and "" respectively.
 func (c *Conn) RouterModule_getPeers(path string, timeout int, nearbyPath string) (peers []string, ms int, err error) {
-	req := &request{
+	req := request{
 		AQ: "RouterModule_getPeers",
 		Args: &struct {
 			Path       string `bencode:"path"`
@@ -17,7 +17,7 @@ func (c *Conn) RouterModule_getPeers(path string, timeout int, nearbyPath string
 	}
 
 	var pack *packet
-	if pack, err = c.sendCmd(req); err == nil {
+	if pack, err = c.sendCmd(&req); err == nil {
 		err = pack.Decode(&struct {
 			Peers *[]string
 			Ms    *int
