@@ -1,9 +1,9 @@
 package key
 
 import (
-	"code.google.com/p/go.crypto/curve25519"
 	"crypto/rand"
 	"encoding/hex"
+	"golang.org/x/crypto/curve25519"
 )
 
 type (
