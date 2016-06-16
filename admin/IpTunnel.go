@@ -1,8 +1,9 @@
 package admin
 
 import (
-	"github.com/ehmry/go-cjdns/key"
 	"net"
+
+	"github.com/ehmry/go-cjdns/key"
 )
 
 func (c *Conn) IpTunnel_allowConnection(publicKey *key.Public, addr net.IP) (err error) {
@@ -34,7 +35,7 @@ func (c *Conn) IpTunnel_connectTo(publicKey *key.Public) error {
 // IpTunnel_listConnections returns a list of all current IP tunnels
 func (c *Conn) IpTunnel_listConnections() (tunnelIndexes []int, err error) {
 	resp := new(struct {
-		List []int
+		Connections []int
 	})
 
 	var pack *packet
@@ -42,7 +43,7 @@ func (c *Conn) IpTunnel_listConnections() (tunnelIndexes []int, err error) {
 	if err == nil {
 		err = pack.Decode(resp)
 	}
-	return resp.List, err
+	return resp.Connections, err
 }
 
 func (c *Conn) IpTunnel_removeConnection(connection int) error {
