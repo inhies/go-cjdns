@@ -1,6 +1,6 @@
 package admin
 
-import "github.com/inhies/go-cjdns/key"
+import "github.com/ehmry/go-cjdns/key"
 
 const (
 	BeaconDisable       = 0 //  No beacons are sent and incoming beacon messages are discarded.

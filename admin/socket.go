@@ -71,7 +71,10 @@ func (a *Conn) readFromConn() {
 			continue
 		}
 
-		if c, ok := a.logStreams[r.StreamId]; ok {
+		var id int
+		fmt.Sprintf(r.StreamId, "%x", &id)
+
+		if c, ok := a.logStreams[id]; ok {
 			m := new(LogMessage)
 			if err = bencode.Unmarshal(b, m); err == nil {
 				// this runs in it's own go routine because we can't
@@ -194,9 +197,11 @@ func (a *Conn) cookie() (string, error) {
 
 func (a *Conn) registerLogChan(streamId string, c chan<- *LogMessage) {
 	a.mu.Lock()
+	var id int
+	fmt.Sprintf(streamId, "%x", &id)
 	if a.logStreams == nil {
-		a.logStreams = make(map[string]chan<- *LogMessage)
+		a.logStreams = make(map[int]chan<- *LogMessage)
 	}
-	a.logStreams[streamId] = c
+	a.logStreams[id] = c
 	a.mu.Unlock()
 }

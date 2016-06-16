@@ -1,6 +1,6 @@
 package admin
 
-import "github.com/inhies/go-cjdns/key"
+import "github.com/ehmry/go-cjdns/key"
 
 func (c *Conn) InterfaceController_disconnectPeer(pubKey key.Public) error {
 	_, err := c.sendCmd(&request{
@@ -51,8 +51,8 @@ type PeerStats struct {
 	PublicKey          *key.Public // Public key of peer
 	SwitchLabel        *Path       // Internal switch label for reaching the peer
 	IsIncoming         bool        // Is the peer connected to us, or us to them
-	BytesOut           int         // Total number of bytes sent
-	BytesIn            int         // Total number of bytes received
+	BytesOut           int64       // Total number of bytes sent
+	BytesIn            int64       // Total number of bytes received
 	State              string      // Peer connection state
 	Last               int64       // Last time a packet was received from the peer
 	ReceivedOutOfRange int
@@ -66,7 +66,7 @@ func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
 		args = new(struct {
 			Page int `bencode:"page"`
 		})
-		req = &request{AQ: "InterfaceController_peerStats", Args: args}
+		req = request{AQ: "InterfaceController_peerStats", Args: args}
 
 		resp = new(struct {
 			More  bool
@@ -81,7 +81,7 @@ func (c *Conn) InterfaceController_peerStats() ([]*PeerStats, error) {
 	resp.More = true
 	for resp.More {
 		resp.More = false
-		if pack, err = c.sendCmd(req); err == nil {
+		if pack, err = c.sendCmd(&req); err == nil {
 			err = pack.Decode(resp)
 		}
 		if err != nil {

@@ -30,7 +30,7 @@ type Conn struct {
 	mu         sync.Mutex
 	queries    chan *request
 	responses  map[string]chan *packet
-	logStreams map[string]chan<- *LogMessage
+	logStreams map[int]chan<- *LogMessage
 }
 
 func Connect(config *CjdnsAdminConfig) (admin *Conn, err error) {

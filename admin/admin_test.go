@@ -1,3 +1,5 @@
+// +build admin
+
 package admin
 
 import (
@@ -51,13 +53,6 @@ func BenchmarkPing(b *testing.B) {
 	}
 }
 
-func TestMemory(t *testing.T) {
-	_, err := c.Memory()
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestCookie(t *testing.T) {
 	_, err := c.cookie()
 	if err != nil {
@@ -81,11 +76,26 @@ func TestAdmin_asyncEnabled(t *testing.T) {
 
 var table Routes
 
-func TestNodeStore_dumpTable(t *testing.T) {
+func TestNodeStor(t *testing.T) {
 	var err error
 	table, err = c.NodeStore_dumpTable()
 	if err != nil {
 		t.Error("NodeStore_dumpTable failed,", err)
+	}
+
+	for _, r := range table {
+		n, err := c.NodeStore_nodeForAddr(r.IP.String())
+		if err != nil {
+			t.Fatal("NodeStore_nodeForAddr failed,", err)
+		}
+
+		for i := 0; i < n.LinkCount; i++ {
+			_, err = c.NodeStore_getLink(r.IP.String(), i)
+			if err != nil {
+				t.Fatal("NodeStore_getLink failed,", err)
+			}
+			return
+		}
 	}
 }
 

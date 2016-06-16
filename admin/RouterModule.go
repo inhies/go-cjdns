@@ -2,6 +2,30 @@ package admin
 
 import "errors"
 
+// RouterModule_getPeers sends a request to a node for a list of its peers.
+// The format of the peers list is 'v${version}.${label}.${publicKey}'.
+//
+// Timeout and nearbyPath default when there are 0 and "" respectively.
+func (c *Conn) RouterModule_getPeers(path string, timeout int, nearbyPath string) (peers []string, ms int, err error) {
+	req := request{
+		AQ: "RouterModule_getPeers",
+		Args: &struct {
+			Path       string `bencode:"path"`
+			Timeout    int    `bencode:"timeout,omitempty"`
+			NearbyPath string `bencode:"nearbyPath,omitempty"`
+		}{path, timeout, nearbyPath},
+	}
+
+	var pack *packet
+	if pack, err = c.sendCmd(&req); err == nil {
+		err = pack.Decode(&struct {
+			Peers *[]string
+			Ms    *int
+		}{&peers, &ms})
+	}
+	return
+}
+
 //RouterModule_lookup returns a single path for an address. Not sure what this is used for
 func (c *Conn) RouterModule_lookup(address string) (response map[string]interface{}, err error) {
 	var (

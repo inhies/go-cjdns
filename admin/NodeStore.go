@@ -3,10 +3,16 @@ package admin
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net"
 	"sort"
 	"strconv"
+)
+
+var (
+	ErrNotInTable = errors.New("Node not in local routing table")
+	ErrParseIP    = errors.New("CJDNS node failed to parse IP")
 )
 
 const magicalLinkConstant = 5366870 //Determined by cjd way back in the dark ages.
@@ -187,7 +193,7 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 		args = new(struct {
 			Page int `bencode:"page"`
 		})
-		req = &request{Q: "NodeStore_dumpTable", Args: args}
+		req = request{Q: "NodeStore_dumpTable", Args: args}
 
 		resp = new(struct {
 			More bool
@@ -201,7 +207,7 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 	resp.More = true
 	for resp.More {
 		resp.More = false
-		if pack, err = c.sendCmd(req); err == nil {
+		if pack, err = c.sendCmd(&req); err == nil {
 			err = pack.Decode(resp)
 		}
 		if err != nil {
@@ -211,6 +217,82 @@ func (c *Conn) NodeStore_dumpTable() (routingTable Routes, err error) {
 	}
 
 	return resp.RoutingTable, err
+}
+
+type Parent struct {
+	IP               string
+	ParentChildLabel string
+}
+
+type EncodingScheme struct {
+	BitCount  int
+	Prefix    string
+	PrefixLen int
+}
+
+type StoreNode struct {
+	RouteLabel      string
+	BestParent      Parent
+	EncodingScheme  []*EncodingScheme
+	Key             string
+	LinkCount       int
+	ProtocolVersion int
+	Reach           int
+}
+
+func (n *StoreNode) String() string {
+	return n.RouteLabel
+}
+
+type StoreLink struct {
+	LinkState                     int
+	Parent, Child                 string
+	CannonicalLabel               string
+	InverseLinkEncodingFormNumber int
+	IsOneHop                      bool
+}
+
+func (c *Conn) NodeStore_getLink(parent string, link int) (l *StoreLink, err error) {
+	req := request{
+		AQ: "NodeStore_getLink",
+		Args: &struct {
+			Parent string `bencode:"parent"`
+			Link   int    `bencode:"linkNum"`
+		}{parent, link},
+	}
+
+	var pack *packet
+	l = new(StoreLink)
+	if pack, err = c.sendCmd(&req); err == nil {
+		err = pack.Decode(&struct{ Result *StoreLink }{l})
+	}
+	return
+}
+
+func (c *Conn) NodeStore_nodeForAddr(ip string) (n *StoreNode, err error) {
+	var (
+		req  = request{AQ: "NodeStore_nodeForAddr"}
+		pack *packet
+	)
+
+	if ip != "" {
+		req.Args = &struct {
+			Ip string `bencode:"ip"`
+		}{ip}
+	}
+
+	n = new(StoreNode)
+	if pack, err = c.sendCmd(&req); err == nil {
+		err = pack.Decode(&struct{ Result *StoreNode }{n})
+	}
+	if err != nil && err.Error() == "parse_ip" {
+		err = ErrParseIP
+	}
+	if err == nil && n.RouteLabel == "" {
+		n = nil
+		err = ErrNotInTable
+	}
+	return
 }
 
 // Peers returns a Routes object representing routes
